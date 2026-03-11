@@ -40,5 +40,5 @@ class BaseVectorStore(ABC):
         pass
 
     @abstractmethod
-    def search(self, query_vector, top_k):
+    async def search(self, query_vector, top_k):
         raise NotImplementedError

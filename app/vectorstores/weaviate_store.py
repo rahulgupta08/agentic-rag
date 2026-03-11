@@ -1,3 +1,5 @@
+import asyncio
+
 from app.vectorstores.base_store import BaseVectorStore
 from app.ingestion.ingestion_utils import generate_deterministic_uuid
 
@@ -86,44 +88,52 @@ class WeaviateStore(BaseVectorStore):
 
 
     async def hybrid_search(self, query_text, top_k=5, alpha=0.5):
-        response = await self.collection.query.hybrid(
-            query=query_text,
-            alpha=alpha,
-            limit=top_k,
-            return_metadata=["score"]
-        )
 
-        results = []
+        def _search():
 
-        for obj in response.objects:
-            score = getattr(obj.metadata, "score", None)
+            response = self.collection.query.hybrid(
+                query=query_text,
+                alpha=alpha,
+                limit=top_k,
+                return_metadata=["score"]
+            )
 
-            results.append({
-                "id": str(obj.uuid),
-                "text": obj.properties.get("text", ""),
-                "metadata": obj.properties,
-                "score": score
-            })
+            results = []
 
-        return results
+            for obj in response.objects:
+
+                score = getattr(obj.metadata, "score", None)
+
+                results.append({
+                    "id": str(obj.uuid),
+                    "text": obj.properties.get("text", ""),
+                    "metadata": obj.properties,
+                    "score": score
+                })
+
+            return results
+
+        return await asyncio.to_thread(_search)
     
     #this is for querying with pre-computed vectors, we can use dense_search for this but this is more explicit
-    def search(self, query_vector, top_k):
+    async def search(self, query_vector, top_k):
 
-        response = self.collection.query.near_vector(
-            near_vector=query_vector,
-            limit=top_k,
-            return_metadata=["distance"]
-        )
+        def _search():
 
-        results = []
+            response = self.collection.query.near_vector(
+                near_vector=query_vector,
+                limit=top_k,
+                return_metadata=["distance"]
+            )
 
-        for obj in response.objects:
+            results = []
 
-            results.append({
-                "id": str(obj.uuid),
-                "text": obj.properties.get("text", ""),
-                "score": obj.metadata.distance
-            })
+            for obj in response.objects:
 
-        return results
+                results.append({
+                    "id": str(obj.uuid),
+                    "text": obj.properties.get("text", ""),
+                    "score": obj.metadata.distance
+                })
+
+            return results

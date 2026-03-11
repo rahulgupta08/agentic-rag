@@ -1,3 +1,5 @@
+import asyncio
+
 from app.vectorstores.base_store import BaseVectorStore
 
 
@@ -52,26 +54,29 @@ class PineconeStore(BaseVectorStore):
 
     # ---------------- RETRIEVAL ----------------
 
-    def dense_search(self, query_vector, top_k=5, namespace=None):
+    async def dense_search(self, query_vector, top_k=5, namespace=None):
 
-        response = self.index.query(
-            vector=query_vector,
-            top_k=top_k,
-            include_metadata=True,
-            namespace=namespace
-        )
+        def _search():
+            response = self.index.query(
+                vector=query_vector,
+                top_k=top_k,
+                include_metadata=True,
+                namespace=namespace
+            )
 
-        results = []
+            results = []
 
-        for match in response["matches"]:
-            results.append({
-                "id": match["id"],
-                "text": match["metadata"].get("text", ""),
-                "metadata": match["metadata"],
-                "score": match["score"]
-            })
+            for match in response["matches"]:
+                results.append({
+                    "id": match["id"],
+                    "text": match["metadata"].get("text", ""),
+                    "metadata": match["metadata"],
+                    "score": match["score"]
+                })
 
-        return results
+            return results
+
+        return await asyncio.to_thread(_search)
 
 
     def hybrid_search(self, query_text, top_k=5, alpha=0.5):
@@ -80,21 +85,25 @@ class PineconeStore(BaseVectorStore):
         )
     
     # This is foe querying the vector store directly without LLM generation. Used in test_simple_rag.py
-    def search(self, query_vector, top_k):
+    async def search(self, query_vector, top_k):
 
-        results = self.index.query(
-            vector=query_vector,
-            top_k=top_k,
-            include_metadata=True
-        )
+        def _search():
 
-        documents = []
+            results = self.index.query(
+                vector=query_vector,
+                top_k=top_k,
+                include_metadata=True
+            )
 
-        for match in results.matches:
-            documents.append({
-                "id": match.id,
-                "text": match.metadata["text"],
-                "score": match.score
-            })
+            documents = []
 
-        return documents
+            for match in results.matches:
+                documents.append({
+                    "id": match.id,
+                    "text": match.metadata["text"],
+                    "score": match.score
+                })
+
+            return documents
+
+        return await asyncio.to_thread(_search)
