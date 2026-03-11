@@ -6,5 +6,5 @@ class HybridRetriever(BaseRetriever):
         self.store = store
         self.alpha = alpha
 
-    def retrieve(self, query: str, top_k: int = 5):
-        return self.store.hybrid_search(query, top_k, self.alpha) 
+    async def retrieve(self, query: str, top_k: int = 5):
+        return await self.store.hybrid_search(query, top_k, self.alpha) 

@@ -32,11 +32,11 @@ class BaseVectorStore(ABC):
     # -------- RETRIEVAL --------
 
     @abstractmethod
-    def dense_search(self, query_vector, top_k: int, namespace: str = None):
+    async def dense_search(self, query_vector, top_k: int, namespace: str = None):
         pass
 
     @abstractmethod
-    def hybrid_search(self, query_text: str, top_k: int, alpha: float):
+    async def hybrid_search(self, query_text: str, top_k: int, alpha: float):
         pass
 
     @abstractmethod

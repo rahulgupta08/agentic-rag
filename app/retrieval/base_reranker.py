@@ -5,7 +5,7 @@ from typing import List, Dict
 class BaseReranker(ABC):
 
     @abstractmethod
-    def rerank(self,
+    async def rerank(self,
         query: str,
         documents: List[Dict],
         top_k: int

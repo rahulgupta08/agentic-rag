@@ -23,8 +23,8 @@ class OpenAIEmbedder(BaseEmbedder):
         return self._dimension
 
 
-    def embed_query(self, text: str) -> List[float]:
-        response = self.client.embeddings.create(
+    async def embed_query(self, text: str) -> List[float]:
+        response = await self.client.embeddings.create(
             model=self.model,
             input=text
         )
@@ -32,9 +32,9 @@ class OpenAIEmbedder(BaseEmbedder):
         return response.data[0].embedding
 
 
-    def embed_batch(self, texts: List[str]) -> List[List[float]]:
+    async def embed_batch(self, texts: List[str]) -> List[List[float]]:
 
-        response = self.client.embeddings.create(
+        response = await self.client.embeddings.create(
             model=self.model,
             input=texts   # OpenAI supports batch input
         )

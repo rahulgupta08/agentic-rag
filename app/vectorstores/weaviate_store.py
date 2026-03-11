@@ -62,8 +62,8 @@ class WeaviateStore(BaseVectorStore):
 
     # ---------------- RETRIEVAL ----------------
 
-    def dense_search(self, query_vector, top_k=5, namespace=None):
-        response = self.collection.query.near_vector(
+    async def dense_search(self, query_vector, top_k=5, namespace=None):
+        response = await self.collection.query.near_vector(
             near_vector=query_vector,
             limit=top_k,
             return_metadata=["distance"]
@@ -85,8 +85,8 @@ class WeaviateStore(BaseVectorStore):
         return results
 
 
-    def hybrid_search(self, query_text, top_k=5, alpha=0.5):
-        response = self.collection.query.hybrid(
+    async def hybrid_search(self, query_text, top_k=5, alpha=0.5):
+        response = await self.collection.query.hybrid(
             query=query_text,
             alpha=alpha,
             limit=top_k,

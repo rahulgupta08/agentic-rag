@@ -5,11 +5,11 @@ from typing import List
 class BaseEmbedder(ABC):
 
     @abstractmethod
-    def embed_query(self, text: str) -> List[float]:
+    async def embed_query(self, text: str) -> List[float]:
         pass
 
     @abstractmethod
-    def embed_batch(self, texts: List[str]) -> List[List[float]]:
+    async  def embed_batch(self, texts: List[str]) -> List[List[float]]:
         pass
 
     @property

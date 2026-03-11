@@ -1,6 +1,7 @@
 from typing import List, Dict
 from sentence_transformers import CrossEncoder
 from .base_reranker import BaseReranker
+import asyncio
 
 
 class CrossEncoderReranker(BaseReranker):
@@ -16,7 +17,7 @@ class CrossEncoderReranker(BaseReranker):
         """
         self.model = CrossEncoder(model_name, device=device)
 
-    def rerank(
+    async def rerank(
         self,
         query: str,
         documents: List[Dict],
@@ -30,7 +31,10 @@ class CrossEncoderReranker(BaseReranker):
         pairs = [(query, doc["text"]) for doc in documents]
 
         # Batch scoring
-        scores = self.model.predict(pairs)
+        scores = await asyncio.to_thread(
+                        self.model.predict,
+                        pairs
+                    )
 
         # Attach scores
         for score, doc in zip(scores, documents):

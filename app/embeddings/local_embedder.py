@@ -17,18 +17,18 @@ class LocalEmbedder(BaseEmbedder):
 
     
 
-    def embed_query(self, text: str) -> List[float]:
+    async def embed_query(self, text: str) -> List[float]:
 
-        embedding = self.model.encode(
+        embedding = await self.model.encode(
             text,
             normalize_embeddings=True
         )
 
         return embedding.tolist()
 
-    def embed_batch(self, texts: List[str]) -> List[List[float]]:
+    async def embed_batch(self, texts: List[str]) -> List[List[float]]:
 
-        embeddings = self.model.encode(
+        embeddings = await self.model.encode(
             texts,
             normalize_embeddings=True
         )
