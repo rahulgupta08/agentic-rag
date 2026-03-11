@@ -1,0 +1,95 @@
+Final Generation Flow
+
+User Query
+   ↓
+Query Expansion
+   ↓
+Dense Retrieval (Top 20)
+   ↓
+Cross Encoder Re-Ranking (Top 5)
+   ↓
+Context With Document IDs
+   ↓
+Prompt Builder (Strict + CoT + Citation)
+   ↓
+LLM Generation
+   ↓
+Citation Validation
+   ↓
+Self-Reflection Validation
+   ↓
+Return Structured Output
+
+
+
+Iterative retriecal( CRAG Style) flow
+
+
+User Query
+   ↓
+Query Expansion
+   ↓
+Retrieve (Top 20)
+   ↓
+Re-rank (Top 5)
+   ↓
+Generate (Cited + Structured)
+   ↓
+Reflection
+   ↓
+If Unsupported:
+      ↓
+   Query Refinement
+      ↓
+   Retrieve Again
+      ↓
+   Regenerate
+   ↓
+Return
+
+updated pipeline with confidence score
+
+User Query
+   ↓
+Query Expansion
+   ↓
+Dense Retrieval (Top 20)
+   ↓
+Cross Encoder Re-Rank (Top 5)
+   ↓
+Generate (Cited + Structured)
+   ↓
+Confidence Score
+   ↓
+If confidence < 0.75
+       ↓
+   Refine Query
+       ↓
+   Retrieve Again
+       ↓
+   Regenerate
+   ↓
+Return
+
+
+Flow after guardrail validations
+
+User Query
+   ↓
+Input Guardrail
+   ↓
+Query Expansion
+   ↓
+Dense Retrieval
+   ↓
+Cross Encoder Re-Rank
+   ↓
+Generate
+   ↓
+Confidence Score
+   ↓
+If Low → Iterative Retrieval
+   ↓
+Output Guardrail
+   ↓
+Return

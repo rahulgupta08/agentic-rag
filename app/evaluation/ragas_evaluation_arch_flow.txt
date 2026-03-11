@@ -1,0 +1,195 @@
+OFFLINE EVALUATION FLOW
+
+Dataset Loader
+   ↓
+For each test query:
+   ↓
+Call RAGService.generate()
+   ↓
+Collect:
+   - Retrieved documents
+   - Final answer
+   - Confidence
+   - Iteration count
+   ↓
+RAGAS Adapter
+   ↓
+Build RAGAS Dataset
+   ↓
+Run RAGAS Metrics:
+   - Faithfulness
+   - Context Precision
+   - Context Recall
+   - Answer Relevance
+   ↓
+Aggregate Results
+   ↓
+Store Experiment Metrics
+
+---------------------------
+
+Our Runtime System
+
+Query
+   ↓
+Guardrail
+   ↓
+Query Expansion
+   ↓
+Dense Retrieval
+   ↓
+Cross Encoder
+   ↓
+Generate
+   ↓
+Confidence
+   ↓
+Iterative Retrieval
+   ↓
+Answer
+
+
+-----------------------------
+
+Evaluation Wrap 
+
+Test Query
+   ↓
+RAGService.generate()
+   ↓
+Capture:
+   - answer
+   - documents_used
+   - confidence
+   - iterations
+   ↓
+Feed into RAGAS
+
+
+🟢 STEP 1 — dataset_loader.py
+
+1️⃣ What It Is
+
+Responsible for loading evaluation queries.
+
+It creates structured evaluation samples like:
+
+{
+    "question": "...",
+    "ground_truth": "..."
+}
+
+Ground truth is optional but strongly recommended.
+
+2️⃣ Why It Is Used
+
+Standardizes test dataset
+
+Enables repeatable experiments
+
+Makes A/B testing possible
+
+--------------------
+
+
+🟢 STEP 2 — ragas_adapter.py
+1️⃣ What It Is
+
+Transforms your runtime RAG output → RAGAS expected format.
+
+Your runtime output:
+
+{
+    "answer": "...",
+    "documents_used": [...],
+    "confidence": 0.82
+}
+
+RAGAS expects:
+
+{
+    "question": "...",
+    "answer": "...",
+    "contexts": [...],
+    "ground_truth": "..."
+}
+2️⃣ Why It Is Used
+
+Decouples runtime format from evaluation format
+
+Keeps RAGService clean
+
+Makes future migrations easier
+
+-------------------------------------
+
+
+🟢 STEP 3 — ragas_evaluator.py
+
+
+1️⃣ What It Is
+
+Core module that:
+
+Builds RAGAS dataset
+
+Runs evaluation metrics
+
+Returns structured scores
+
+2️⃣ Why It Is Used
+
+This is the actual engine.
+
+Without it, you cannot measure:
+
+Faithfulness
+
+Context Precision
+
+Context Recall
+
+Answer Relevance
+
+
+----------------------
+
+
+🟢 STEP 4 — experiment_runner.py
+
+
+1️⃣ What It Is
+
+Coordinates:
+
+Load dataset
+
+Run RAGService
+
+Adapt results
+
+Send to RAGAS
+
+Return aggregated metrics
+
+2️⃣ Why It Is Used
+
+This is your A/B testing engine.
+
+
+
+------------------------------
+
+
+🟢 STEP 5 — metrics_store.py
+1️⃣ What It Is
+
+Stores experiment results.
+
+2️⃣ Why It Is Used
+
+Compare experiments
+
+Log improvements
+
+Detect regression

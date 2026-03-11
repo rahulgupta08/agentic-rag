@@ -1,0 +1,69 @@
+Defines data contracts
+
+DocumentChunk
+EmbeddingRecord
+
+These schemas will be used by:
+
+ingestion
+vectorstores
+retrieval
+evaluation
+
+Data Flow Using These Schemas
+
+Your ingestion pipeline now becomes:
+
+PDF
+↓
+document_loader
+↓
+List[DocumentChunk]
+↓
+embedder
+↓
+List[EmbeddingRecord]
+↓
+vector_store.upsert()
+↓
+registry store (DocumentRegistryRecord)
+
+This schema layer ensures:
+
+vector DB independence
+clean ingestion pipeline
+safe upserts
+document lifecycle tracking
+metadata flexibility
+
+And it fits perfectly with  modules:
+
+ingestion
+vectorstores
+retrieval
+evaluation
+
+
+Important Rule for Metadata
+
+Metadata should always include minimum fields:
+
+document_id
+collection
+source
+
+Everything else is optional.
+
+Example domain extensions:
+
+Financial:
+
+company
+year
+section
+
+Healthcare:
+
+disease
+guideline
+source_org

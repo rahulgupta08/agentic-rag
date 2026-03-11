@@ -1,0 +1,135 @@
+Handles document lifecycle management.
+
+Responsibilities
+
+detect duplicate ingestion
+track embedding model
+track chunk count
+trigger re-index if needed
+
+
+Uses SQLite.
+
+
+This module will:
+
+initialize the registry database
+
+create the registry table
+
+register ingested documents
+
+detect duplicate ingestion
+
+detect document updates
+
+support re-indexing decisions
+
+Responsibilities of DocumentRegistry
+
+The registry module will manage:
+
+initialize database
+create registry table
+register new document
+check if document already ingested
+fetch document metadata
+delete document record
+
+
+Registry Table Schema
+
+SQLite table:
+
+document_registry
+
+Fields:
+
+document_id
+collection
+source_path
+checksum
+chunk_count
+embedding_model
+chunk_size
+ingested_at
+
+Primary key:
+
+document_id
+
+How This Fits Into Ingestion Pipeline
+
+Later in your pipeline:
+
+PDF
+ ↓
+compute checksum
+ ↓
+registry.get_document()
+
+Decision logic:
+
+if document not in registry → ingest
+if checksum same → skip
+if checksum changed → re-index
+
+
+Registry Workflow Example
+
+First ingestion:
+
+apple_10k_2024.pdf
+ ↓
+registry lookup → NOT FOUND
+ ↓
+chunk → embed → store
+ ↓
+registry.register_document()
+
+----------
+
+Second ingestion attempt:
+
+apple_10k_2024.pdf
+ ↓
+registry lookup → FOUND
+ ↓
+checksum same → skip
+
+Updated document:
+
+apple_10k_2024.pdf
+ ↓
+registry lookup → FOUND
+ ↓
+checksum changed
+ ↓
+delete vectors
+ ↓
+re-index
+
+-----------
+
+Why This Module Is Important
+
+This registry enables:
+
+safe ingestion
+document lifecycle management
+incremental indexing
+re-indexing support
+debugging
+
+Without it, RAG systems become very hard to maintain.
+
+Registry Now Tracks Three Things
+
+Registry now protects against:
+
+Document change
+checksum
+Pipeline change
+config_hash
+Duplicate ingestion
+document_id

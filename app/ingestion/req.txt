@@ -1,0 +1,115 @@
+ingestion_pipeline.py
+
+This will be the orchestrator.
+
+Pipeline:
+
+load document
+↓
+check registry
+↓
+chunk
+↓
+embed
+↓
+upsert vectors
+↓
+update registry
+
+
+document_loader.py
+
+Responsible for:
+
+loading PDFs
+extracting text
+basic cleaning
+
+
+ingest_document.py
+
+This becomes the CLI entrypoint.
+
+Example usage:
+
+python app/ingestion/ingest_document.py \
+  --file data/raw_documents/apple_10k_2024.pdf \
+  --collection financial_documents
+
+
+  PDF
+ ↓
+document_loader
+ ↓
+chunker
+ ↓
+DocumentChunk schema
+ ↓
+embedder
+ ↓
+EmbeddingRecord schema
+ ↓
+vector_store.upsert()
+ ↓
+SQLite registry update
+
+
+This keeps:
+
+vector DB independent
+domain independent
+clean architecture
+
+
+Your ingestion pipeline should follow:
+
+load document
+↓
+compute checksum
+↓
+compute config_hash
+↓
+registry lookup
+
+Decision:
+
+if document not found:
+    ingest
+
+elif checksum changed:
+    re-index
+
+elif config_hash changed:
+    re-index
+
+else:
+    skip
+
+
+
+-------------------------
+
+
+Final Ingestion Decision Logic
+
+Your future pipeline will follow this logic:
+
+file_path
+ ↓
+generate_document_id()
+ ↓
+compute_checksum()
+ ↓
+generate_config_hash()
+ ↓
+registry lookup
+
+Decision:
+
+document not found → ingest
+
+checksum changed → re-index
+
+config_hash changed → re-index
+
+else → skip ingestion
