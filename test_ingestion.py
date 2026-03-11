@@ -9,6 +9,7 @@ from app.embeddings.local_embedder import LocalEmbedder
 from app.schemas.embedding_record import EmbeddingRecordSchema
 from app.vectorstores.factory import get_vector_store
 from app.ingestion.metadata_extractor import extract_metadata_from_filename
+import asyncio
 
 
 def load_and_chunk_document():
@@ -17,7 +18,7 @@ def load_and_chunk_document():
     collection = "financial_documents"
 
     loader = DocumentLoader(
-        "data/raw_documents/aapl-10K_2023.pdf"
+        "data/raw_documents/aapl-10K_2024.pdf"
     )
 
     print("File path:", loader.file_path)
@@ -29,7 +30,7 @@ def load_and_chunk_document():
     document = loader.load()
 
     document_id = generate_document_id(
-        "data/raw_documents/aapl-10K_2023.pdf"
+        "data/raw_documents/aapl-10K_2024.pdf"
     )
 
     chunker = DocumentChunker()
@@ -50,7 +51,10 @@ def load_and_chunk_document():
 
     text_for_embedding = [chunk.text for chunk in chunks]
 
-    embeddings = embedder.embed_batch(text_for_embedding)
+    #embeddings = embedder.embed_batch(text_for_embedding)
+    embeddings = asyncio.run(
+                    embedder.embed_batch(text_for_embedding)
+                    )
     print("Embeddings generated ", len(embeddings))
 
     embedding_records = []

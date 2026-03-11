@@ -20,9 +20,9 @@ collection = client.collections.get("financial_documents")
 response = collection.query.fetch_objects(
     filters=(
         Filter.by_property("ticker").equal("AAPL") &
-        Filter.by_property("year").equal("2023")
+        Filter.by_property("year").equal("2024")
     ),
-    limit=1
+    limit=10
 )
 
 

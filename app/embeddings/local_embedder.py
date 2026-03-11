@@ -1,5 +1,6 @@
 from typing import List
 from sentence_transformers import SentenceTransformer
+import asyncio
 
 from .base_embedder import BaseEmbedder
 
@@ -19,7 +20,8 @@ class LocalEmbedder(BaseEmbedder):
 
     async def embed_query(self, text: str) -> List[float]:
 
-        embedding = await self.model.encode(
+        embedding = await asyncio.to_thread(
+            self.model.encode,
             text,
             normalize_embeddings=True
         )
@@ -28,7 +30,8 @@ class LocalEmbedder(BaseEmbedder):
 
     async def embed_batch(self, texts: List[str]) -> List[List[float]]:
 
-        embeddings = await self.model.encode(
+        embeddings = await asyncio.to_thread(
+            self.model.encode,
             texts,
             normalize_embeddings=True
         )

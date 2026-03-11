@@ -1,5 +1,6 @@
 import asyncio
 from openai import OpenAI
+from langchain_openai import ChatOpenAI
 
 from app.rag.rag_pipeline import RAGPipeline
 from app.services.rag_service import RAGService
@@ -7,6 +8,10 @@ from app.retrieval.dense_retriever import DenseRetriever
 from app.vectorstores.factory import get_vector_store
 from app.prompts.rag_prompt import RAGPromptBuilder
 from app.config import OPENAI_API_KEY
+from app.embeddings.local_embedder import LocalEmbedder
+from dotenv import load_dotenv
+
+load_dotenv()
 
 
 def build_rag_service():
@@ -14,15 +19,20 @@ def build_rag_service():
     # Vector store
     vector_store = get_vector_store()
 
+    embedder = LocalEmbedder()
+
+
     # Retriever
     retriever = DenseRetriever(
         vector_store=vector_store,
-        embedder=None,      # assuming embedder handled elsewhere
+        embedder=embedder,      # assuming embedder handled elsewhere
         reranker=None
     )
 
     # LLM
-    llm = OpenAI(api_key=OPENAI_API_KEY)
+    llm = ChatOpenAI(api_key=OPENAI_API_KEY,
+                     model="gpt-4o-mini",
+    temperature=0)
 
     # Prompt builder
     prompt_builder = RAGPromptBuilder()

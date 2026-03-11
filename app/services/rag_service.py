@@ -1,5 +1,6 @@
 from typing import Dict, List
 import re
+import asyncio
 
 
 
@@ -17,11 +18,19 @@ class RAGService:
         if self.guardrail_manager:
             input_validation = self.guardrail_manager.validate_input(query)
             return input_validation
+        class DefaultValidation:
+            allowed = True
+            reason = None
+        return DefaultValidation()
         
     def check_output_guardrail(self, answer: str) -> Dict:
         if self.guardrail_manager:
             output_validation = self.guardrail_manager.validate_output(answer)
             return output_validation
+        class DefaultValidation:
+            allowed = True
+            reason = None
+        return DefaultValidation()
             
 
     def generate(self, query: str, top_k: int = 5) -> Dict:
@@ -45,7 +54,7 @@ class RAGService:
             expanded_query = query
 
         # Step 2: Retrieve documents
-        documents = self.retriever.retrieve(expanded_query, top_k=top_k)
+        documents = asyncio.run(self.retriever.retrieve(expanded_query, top_k=top_k))
 
         # Step 2: Build context
         context = self._build_context(documents)
@@ -141,7 +150,7 @@ class RAGService:
                 expanded_query = current_query
 
             # Step 2: Retrieve
-            documents = self.retriever.retrieve(expanded_query, top_k=top_k)
+            documents = asyncio.run(self.retriever.retrieve(expanded_query, top_k=top_k))
 
             context = self._build_context(documents)
 

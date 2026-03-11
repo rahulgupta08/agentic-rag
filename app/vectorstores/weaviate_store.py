@@ -65,11 +65,15 @@ class WeaviateStore(BaseVectorStore):
     # ---------------- RETRIEVAL ----------------
 
     async def dense_search(self, query_vector, top_k=5, namespace=None):
-        response = await self.collection.query.near_vector(
-            near_vector=query_vector,
-            limit=top_k,
-            return_metadata=["distance"]
-        )
+        
+        def _search():
+            return self.collection.query.near_vector(
+                near_vector=query_vector,
+                limit=top_k,
+                return_metadata=["distance"]
+            )
+
+        response = await asyncio.to_thread(_search)
 
         results = []
 
