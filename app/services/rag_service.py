@@ -31,6 +31,23 @@ class RAGService:
             allowed = True
             reason = None
         return DefaultValidation()
+    
+    async def generate_from_context(self, query: str, context: str):
+        """Generation only (used by agent)"""
+
+        prompt = f"""
+        Answer the question using the context below.
+
+        Context:
+        {context}
+
+        Question:
+        {query}
+        """
+
+        response = await self.llm.ainvoke(prompt)
+
+        return response
             
 
     def generate(self, query: str, top_k: int = 5) -> Dict:
@@ -55,6 +72,7 @@ class RAGService:
 
         # Step 2: Retrieve documents
         documents = asyncio.run(self.retriever.retrieve(expanded_query, top_k=top_k))
+        #documents = await self.retriever.retrieve(expanded_query, top_k=top_k)
 
         # Step 2: Build context
         context = self._build_context(documents)
@@ -68,7 +86,7 @@ class RAGService:
         #prompt = self.prompt_builder.build_generation_prompt(context=context,question=expanded_query)
 
         # Step 4: Call LLM
-        answer = self.llm.invoke(prompt)
+        answer =  self.llm.invoke(prompt)
 
         # In case we want to build reflection prompt instead of the default prompt
         # This is Self-Reflection Prompting

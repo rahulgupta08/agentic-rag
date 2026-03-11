@@ -69,7 +69,7 @@ class WeaviateStore(BaseVectorStore):
         def _search():
             return self.collection.query.near_vector(
                 near_vector=query_vector,
-                limit=top_k,
+                limit=int(top_k),
                 return_metadata=["distance"]
             )
 
