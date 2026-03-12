@@ -10,13 +10,14 @@ def create_retriever_node(rag_service):
 
         log_node_start("retriever", state)
 
-
         query = state.query
 
         documents = await rag_service.retriever.retrieve(query)
 
+        # Store retrieved docs
         state.retrieved_docs = documents
 
+        # Build context string for generator
         context_parts = []
 
         for doc in documents:
@@ -27,10 +28,11 @@ def create_retriever_node(rag_service):
 
         state.context = "\n\n".join(context_parts)
 
+        # IMPORTANT: increment execution step
+        state.current_step += 1
+
         log_node_end("retriever", state)
 
         return state
-    
-        
 
     return retriever_node

@@ -6,13 +6,24 @@ def planner_node(state: AgentState):
 
     log_node_start("planner", state)
 
-    plan = "retrieve"
+    query_type = state.query_type or "rag_query"
 
-    if state.metadata is None:
-        state.metadata = {}
+    # Determine execution plan
+    if query_type == "rag_query":
+        plan = ["vector_search", "generate"]
 
-    state.metadata["plan"] = plan
+    elif query_type == "web_query":
+        plan = ["web_search", "generate"]
 
-    log_node_start("planner", state)
+    else:
+        # fallback
+        plan = ["generate"]
 
-    return state
+    log_node_end("planner", plan)
+
+    return {
+        "plan": plan,
+        "current_step": 0
+    }
+
+    
