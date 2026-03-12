@@ -1,19 +1,23 @@
+from accelerate import state
+
 from app.agents.state import AgentState
 from app.utils.debug import log_node_start, log_node_end
 
 
-def create_executor_node():
+def create_executor_node(web_search_tool):
 
     async def executor_node(state: AgentState):
 
         log_node_start("executor", state)
 
-        # Placeholder until web search tool is implemented
-        # In future this will call MCP tools or web_search
+        step = state.plan[state.current_step]
 
-        state.web_results = []
+        query = step.get("input", {}).get("query", state.query)
 
-        # Advance execution step
+        results = await web_search_tool.search(query)
+
+        state.web_results = results
+
         state.current_step += 1
 
         log_node_end("executor", state)

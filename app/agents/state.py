@@ -15,7 +15,7 @@ class AgentState(BaseModel):
     query_type: Optional[str] = None
 
     # Planner execution
-    plan: List[str] = Field(default_factory=list)
+    plan: List[Any] = Field(default_factory=list)
     # current step in the plan execution. Tracks execution progess
     current_step: int = 0
 

@@ -1,29 +1,78 @@
+import json
 from app.agents.state import AgentState
 from app.utils.debug import log_node_start, log_node_end
 
 
-def planner_node(state: AgentState):
+def create_planner_node(llm, tool_registry):
 
-    log_node_start("planner", state)
+    async def planner_node(state: AgentState):
 
-    query_type = state.query_type or "rag_query"
+        log_node_start("planner", state)
 
-    # Determine execution plan
-    if query_type == "rag_query":
-        plan = ["vector_search", "generate"]
+        query = state.query
 
-    elif query_type == "web_query":
-        plan = ["web_search", "generate"]
+        tools_description = tool_registry.format_for_prompt()
 
-    else:
-        # fallback
-        plan = ["generate"]
+        prompt = f"""
+        You are an AI planning agent.
 
-    log_node_end("planner", plan)
+        Available tools:
 
-    return {
-        "plan": plan,
-        "current_step": 0
-    }
+        {tools_description}
 
-    
+        Create a plan to answer the user query.
+
+        Return a JSON array of steps.
+
+        Each step must contain:
+        - tool
+        - input (object with parameters)
+
+        Example:
+
+        [
+        {{
+            "tool": "vector_search",
+            "input": {{"query": "Apple revenue growth"}}
+        }},
+        {{
+            "tool": "web_search",
+            "input": {{"query": "Apple stock price today"}}
+        }},
+        {{
+            "tool": "generate"
+        }}
+        ]
+
+        Rules:
+        - Always end with "generate"
+        - Use vector_search for internal documents
+        - Use web_search for current information
+        - Return ONLY JSON
+
+        Query:
+        {query}
+        """
+
+        response = await llm.ainvoke(prompt)
+
+        try:
+            plan = json.loads(response.content.strip())
+        except Exception:
+            plan = [{"tool": "vector_search", "input": query}, {"tool": "generate"}]
+
+        
+
+        state.plan = plan
+        state.current_step = 0
+
+        print("\n🧠 Planner Output")
+        print("Query:", query)
+        print("Plan :", plan)
+        print()
+
+        log_node_end("planner", state)
+
+        return state
+
+    return planner_node

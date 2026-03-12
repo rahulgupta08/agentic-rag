@@ -1,3 +1,5 @@
+from accelerate import state
+
 from app.agents.state import AgentState
 
 
@@ -10,7 +12,9 @@ def create_retriever_node(rag_service):
 
         log_node_start("retriever", state)
 
-        query = state.query
+        step = state.plan[state.current_step]
+
+        query = step.get("input", {}).get("query", state.query)
 
         documents = await rag_service.retriever.retrieve(query)
 

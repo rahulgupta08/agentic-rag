@@ -12,6 +12,7 @@ venv/
 chroma_db/
 faiss_index/
 weaviate_data/
+conversation_data/
 
 # OS
 .DS_Store

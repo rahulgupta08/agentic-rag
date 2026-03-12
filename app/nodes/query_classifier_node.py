@@ -1,30 +1,56 @@
 from app.agents.state import AgentState
+from app.utils.debug import log_node_start, log_node_end
 
 
-def query_classifier_node(state: AgentState):
+def create_query_classifier_node(llm):
 
-    query = state.query.lower()
+    async def query_classifier_node(state: AgentState):
 
-    # Simple keyword based classification
+        log_node_start("query_classifier", state)
 
-    web_keywords = [
-        "current",
-        "latest",
-        "today",
-        "news",
-        "stock price",
-        "recent",
-        "now"
-    ]
+        query = state.query
 
-    # Detect if query requires web search
-    if any(keyword in query for keyword in web_keywords):
-        query_type = "web_query"
+        prompt = f"""
+                You are an AI system that decides whether a query should use internal documents or internet search.
 
-    # Default assumption: RAG query
-    else:
-        query_type = "rag_query"
+                The internal knowledge base contains:
+                - Apple 10K reports
+                - company financial filings
+                - SEC filings
+                - corporate reports
 
-    return {
-        "query_type": query_type
-    }
+                Classification rules:
+
+                rag_query:
+                Use if the question refers to company filings, financial reports, or internal documents.
+
+                web_query:
+                Use if the question requires:
+                - current stock prices
+                - latest news
+                - current events
+                - real-time information
+
+                Return ONLY:
+                rag_query
+                or
+                web_query
+
+                Query:
+                {query}
+                """
+
+        response = await llm.ainvoke(prompt)
+
+        label = response.content.strip().lower()
+
+        if "web_query" in label:
+            state.query_type = "web_query"
+        else:
+            state.query_type = "rag_query"
+
+        log_node_end("query_classifier", state)
+
+        return state
+
+    return query_classifier_node

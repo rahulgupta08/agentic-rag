@@ -17,7 +17,9 @@ async def run_agent():
     # Create initial state
     state = AgentState(
         session_id=str(uuid.uuid4()),
-        query="What is Apple's latest stock price?" #What does Apple's 10K say about revenue growth?"
+        query= "What does Apple's 2023 10K say about revenue growth with its latest stock price?"
+        #"What is Apple's latest stock price?" #What does Apple's 10K say about revenue growth?"
+       # "What does Apple's 2024 10K say about revenue growth with its latest stock price?"
     )
 
     # Run graph
