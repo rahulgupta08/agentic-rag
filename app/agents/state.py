@@ -2,9 +2,7 @@ from typing import  Dict, List, Optional, Any
 from pydantic import BaseModel
 
 class AgentState(BaseModel):
-    """
-    Represents the state of an agent, including its name, description, and any additional information.
-    """
+   
     query: str
 
     retrieved_docs: Optional[List[Dict[str, Any]]] = None
