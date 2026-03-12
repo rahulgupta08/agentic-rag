@@ -7,6 +7,9 @@ from app.nodes.retriever_node import create_retriever_node
 from app.nodes.tool_node import tool_node
 from app.nodes.validator_node import validator_node
 from app.nodes.answer_node import create_answer_node
+from dotenv import load_dotenv
+
+load_dotenv()
 
 def route_after_validation(state: AgentState):
 

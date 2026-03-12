@@ -3,7 +3,7 @@ from app.agents.state import AgentState
 from app.nodes.tool_node import tool_node
 from app.nodes.validator_node import validator_node
 from app.nodes.answer_node import create_answer_node
-from app.services.rag_service import build_rag_service
+from test_rag_pipeline import build_rag_service
 import asyncio
 
 async def test_answer_node():

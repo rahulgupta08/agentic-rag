@@ -3,13 +3,9 @@ openai
 pypdf
 python-dotenv
 fastapi
-pip install torch
-pip install transformers==4.41.2
-pip install accelerate==0.30.1
-pip install sentence-transformers==2.7.0
-
-pip install numpy==1.26.4
-pip install torch
-pip install transformers==4.41.2
-pip install accelerate==0.30.1
-pip install sentence-transformers==2.7.0
+torch
+transformers==4.41.2
+accelerate==0.30.1
+sentence-transformers==2.7.0
+numpy==1.26.
+langsmith
