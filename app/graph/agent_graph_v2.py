@@ -6,13 +6,11 @@ from app.agents.state import AgentState
 from app.core.memory_reader import memory_reader_node
 from app.core.memory_writer import memory_writer_node
 from app.nodes.planner_node import create_planner_node
-from app.nodes.router_node import router_node
+from app.nodes.router_node import create_router_node
 from app.nodes.executor_node import create_executor_node
 from app.nodes.generator_node import create_generator_node
 
 from app.nodes.validator_node import validator_node
-from app.tools import tool_registry
-from app.nodes.query_classifier_node import create_query_classifier_node
 from app.tools.tool_registry import ToolRegistry
 from app.mcp.client.mcp_singleton import mcp_client
 
@@ -43,13 +41,12 @@ async def build_agent_graph_v2(rag_service):
     generator_node = create_generator_node(rag_service)
 
     executor_node = create_executor_node()
-    query_classifier_node = create_query_classifier_node(llm)
     planner_node = create_planner_node(llm, tool_registry)
+    router_node = create_router_node(tool_registry)
     
 
     # Register nodes
     graph.add_node("memory_reader", memory_reader_node)
-    graph.add_node("query_classifier", query_classifier_node)
     graph.add_node("planner", planner_node)
     graph.add_node("router", router_node)
 
@@ -66,8 +63,7 @@ async def build_agent_graph_v2(rag_service):
 
 
     # Linear flow
-    graph.add_edge("memory_reader", "query_classifier")
-    graph.add_edge("query_classifier", "planner")
+    graph.add_edge("memory_reader", "planner")
     graph.add_edge("planner", "router")
 
 

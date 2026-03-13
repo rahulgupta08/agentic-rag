@@ -2,25 +2,27 @@ from app.agents.state import AgentState
 from app.utils.debug import log_node_start, log_node_end
 
 
-def router_node(state: AgentState):
+def create_router_node(tool_registry):
 
-    log_node_start("router", state)
+    def router_node(state: AgentState):
 
-    if not state.plan:
-        decision = "validator"
-    else:
-        step = state.plan[0]
-        tool = step.get("tool")
+        log_node_start("router", state)
 
-        if tool == "generate":
-            decision = "generator"
+        if not state.plan:
+            decision = "validator"
+
         else:
-            decision = "executor"
+            step = state.plan[0]
+            tool = step.get("tool")
 
-    print("\n🔀 Router Decision")
-    print("Current Plan:", state.plan)
-    print("Next Node:", decision)
+            decision = tool_registry.get_node(tool)
 
-    log_node_end("router", state)
+        print("\n🔀 Router Decision")
+        print("Current Plan:", state.plan)
+        print("Next Node:", decision)
 
-    return {"next": decision}
+        log_node_end("router", state)
+
+        return {"next": decision}
+
+    return router_node

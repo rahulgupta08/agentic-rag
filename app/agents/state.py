@@ -12,9 +12,6 @@ class AgentState(BaseModel):
     # User question
     query: str
 
-    # Query classification, either a RAG query, web search or hybrid query
-    query_type: Optional[str] = None
-
     # Planner execution
     plan: List[Any] = Field(default_factory=list)
 
