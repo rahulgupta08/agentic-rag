@@ -12,7 +12,7 @@ async def main():
     graph = await build_agent_graph_v2(rag_service)
     png_bytes =  graph.get_graph().draw_mermaid_png()
 
-    with open("data/graph_with_mcp.png", "wb") as f:
+    with open("data/graph_with_mcp_v2.png", "wb") as f:
         f.write(png_bytes)
 
 

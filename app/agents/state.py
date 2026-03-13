@@ -20,6 +20,8 @@ class AgentState(BaseModel):
 
     validation_score: Annotated[Optional[float], lambda a, b: b] = None
     needs_retry: Annotated[Optional[bool], lambda a, b: b] = None
+    retry_count: Annotated[int, lambda a, b: b] = 0
+    max_retries: int = 2
 
     conversation_history: Optional[List[Any]] = None
 

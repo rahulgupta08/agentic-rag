@@ -16,11 +16,22 @@ async def validator_node(state: AgentState):
     # Case 1 — no documents retrieved
     if not vector_docs or len(vector_docs) == 0:
 
+        retry_count = state.retry_count + 1
+        
+        if retry_count > state.max_retries:
+            log_node_end("validator", state)
+
+            return {
+                "validation_score": 0.0,
+                "needs_retry": False
+            }
+
         log_node_end("validator", state)
 
         return {
             "validation_score": 0.0,
-            "needs_retry": False
+            "needs_retry": True,
+            "retry_count" : retry_count
         }
 
     # Case 2 — retrieval looks valid

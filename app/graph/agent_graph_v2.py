@@ -84,7 +84,14 @@ async def build_agent_graph_v2(rag_service):
     graph.add_edge("generator", "validator")
 
     # Memory persistence
-    graph.add_edge("validator", "memory_writer")
+    graph.add_conditional_edges(
+        "validator",
+        lambda state: "planner" if state.needs_retry else "memory_writer",
+        {
+            "planner": "planner",
+            "memory_writer": "memory_writer",
+        },
+    )
 
     # End
     graph.add_edge("memory_writer", END)
