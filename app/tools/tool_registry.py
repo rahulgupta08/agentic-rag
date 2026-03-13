@@ -6,6 +6,7 @@ class ToolRegistry:
     def register(self, name, description, node):
 
         self.tools[name] = {
+            "name" : name,
             "description": description,
             "node": node
         }

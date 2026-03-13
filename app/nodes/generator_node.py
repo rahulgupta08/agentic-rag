@@ -10,26 +10,33 @@ def create_generator_node(rag_service):
 
         query = state.query
 
-        retrieved_docs = state.retrieved_docs or []
-        web_results = state.web_results or []
-        conversation_history = state.conversation_history or []
+        tool_results =  state.tool_results or []
 
         # Build context from retrieved docs
         context_parts = []
 
-        for doc in retrieved_docs:
-            if hasattr(doc, "page_content"):
-                context_parts.append(doc.page_content)
-            else:
-                context_parts.append(str(doc))
+        for tool_result in tool_results:
+            tool_name = tool_result.get("tool")
+            output = tool_result.get("output", [])
 
-        # Add web results if available
-        for result in web_results:
-            if isinstance(result, dict):
-                snippet = result.get("snippet", "")
-                context_parts.append(snippet)
-            else:
-                context_parts.append(str(result))
+            # Handle vector search results
+            if tool_name == "vector_search":
+
+                for doc in output:
+                    if hasattr(doc, "page_content"):
+                        context_parts.append(doc.page_content)
+                    else:
+                        context_parts.append(str(doc))
+
+            # Handle web search results
+            elif tool_name == "web_search":
+
+                for result in output:
+                    if isinstance(result, dict):
+                        snippet = result.get("snippet", "")
+                        context_parts.append(snippet)
+                    else:
+                        context_parts.append(str(result))
 
         context = "\n\n".join(context_parts)
 
@@ -40,13 +47,11 @@ def create_generator_node(rag_service):
             #history=conversation_history
         )
 
-        state.answer = answer.content
-
-        # Increment execution step
-        state.current_step += 1
-
         log_node_end("generator", state)
 
-        return state
+        return {
+            "answer": answer.content,
+            "plan": state.plan[1:]
+        }
 
     return generator_node

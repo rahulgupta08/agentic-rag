@@ -15,4 +15,4 @@ def memory_writer_node(state):
         message=state.answer,
     )
 
-    return state
+    return {}

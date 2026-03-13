@@ -8,6 +8,7 @@ import weaviate
 from pinecone import Pinecone, ServerlessSpec
 from dotenv import load_dotenv
 from app.embeddings.embedder_factory import get_embedder
+import sys
 
 load_dotenv()
 
@@ -19,8 +20,8 @@ def get_vector_store():
     embedder = get_embedder()
     dimension = embedder.dimension
 
-    print('DIMENTION : -------- ', dimension)
-    print('VECTOR_DB_PROVIDER' , VECTOR_DB_PROVIDER)
+    print('DIMENTION : -------- ', dimension, file= sys.stderr)
+    print('VECTOR_DB_PROVIDER' , VECTOR_DB_PROVIDER, file = sys.stderr)
 
     if VECTOR_DB_PROVIDER == "pinecone":
         pc = Pinecone(api_key=PINECONE_API_KEY)

@@ -10,61 +10,58 @@ def create_planner_node(llm, tool_registry):
         log_node_start("planner", state)
 
         query = state.query
-
         tools_description = tool_registry.format_for_prompt()
 
         prompt = f"""
-        You are an AI planning agent.
+            You are an AI planning agent.
 
-        Available tools:
+            Available tools:
 
-        {tools_description}
+            {tools_description}
 
-        Create a plan to answer the user query.
+            Create a plan to answer the user query.
 
-        Return a JSON array of steps.
+            Return a JSON array of steps.
 
-        Each step must contain:
-        - tool
-        - input (object with parameters)
+            Each step must contain:
+            - tool
+            - input (object with parameters)
 
-        Example:
+            Example:
 
-        [
-        {{
+            [
+            {{
             "tool": "vector_search",
             "input": {{"query": "Apple revenue growth"}}
-        }},
-        {{
+            }},
+            {{
             "tool": "web_search",
             "input": {{"query": "Apple stock price today"}}
-        }},
-        {{
+            }},
+            {{
             "tool": "generate"
-        }}
-        ]
+            }}
+            ]
 
-        Rules:
-        - Always end with "generate"
-        - Use vector_search for internal documents
-        - Use web_search for current information
-        - Return ONLY JSON
+            Rules:
+            - Always end with "generate"
+            - Use vector_search for internal documents
+            - Use web_search for current information
+            - Return ONLY JSON
 
-        Query:
-        {query}
-        """
+            Query:
+            {query}
+            """
 
         response = await llm.ainvoke(prompt)
 
         try:
             plan = json.loads(response.content.strip())
         except Exception:
-            plan = [{"tool": "vector_search", "input": query}, {"tool": "generate"}]
-
-        
-
-        state.plan = plan
-        state.current_step = 0
+            plan = [
+                {"tool": "vector_search", "input": {"query": query}},
+                {"tool": "generate"}
+            ]
 
         print("\n🧠 Planner Output")
         print("Query:", query)
@@ -73,6 +70,8 @@ def create_planner_node(llm, tool_registry):
 
         log_node_end("planner", state)
 
-        return state
+        return {
+            "plan": plan
+        }
 
     return planner_node

@@ -10,3 +10,6 @@ sentence-transformers==2.7.0
 numpy==1.26.
 langsmith
 ddgs
+mcp
+anyio
+rich

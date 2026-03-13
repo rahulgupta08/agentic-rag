@@ -4,25 +4,18 @@ from app.tools import tool_registry
 
 def route_after_router(state: AgentState, tool_registry):
 
-    plan = state.plan
-    step = state.current_step
+    if not state.plan:
+        return "generator"
 
     print("\n🔀 Router Decision")
-    print("Current Step:", step)
-    print("Plan:", plan)
+    print("Current Plan:", state.plan)
 
-    if step >= len(plan):
-        return "validator"
 
-    action = plan[step]["tool"]
+    step = state.plan[0]
+    tool  = step["tool"]
 
-    next_node = tool_registry.get_node(action)
+    next_node = tool_registry.get_node(tool)
 
-    print("Action:", action)
     print("Next Node:", next_node)
-    print()
-
-    if not next_node:
-        return "generator"
 
     return next_node
