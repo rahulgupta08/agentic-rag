@@ -1,13 +1,14 @@
 import json
 from app.agents.state import AgentState
-from app.utils.debug import log_node_start, log_node_end
+from app.core.observability import metrics
+
 
 
 def create_planner_node(llm, tool_registry):
 
     async def planner_node(state: AgentState):
 
-        log_node_start("planner", state)
+        
 
         query = state.query
         tools_description = tool_registry.format_for_prompt()
@@ -141,7 +142,7 @@ def create_planner_node(llm, tool_registry):
         Return ONLY the JSON plan.
         """
 
-        response = await llm.ainvoke(prompt,temparature = 0)
+        response = await llm.ainvoke(prompt,temperature = 0)
 
         try:
             plan = json.loads(response.content.strip())
@@ -151,12 +152,7 @@ def create_planner_node(llm, tool_registry):
                 {"tool": "generate"}
             ]
 
-        print("\n🧠 Planner Output")
-        print("Query:", query)
-        print("Plan :", plan)
-        print()
-
-        log_node_end("planner", state)
+        metrics.log_plan(plan)
 
         return {
             "plan": plan

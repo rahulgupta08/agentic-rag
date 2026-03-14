@@ -1,10 +1,9 @@
 from app.agents.state import AgentState
-from app.utils.debug import log_node_start, log_node_end
+from app.core.observability import metrics
+
 
 
 async def validator_node(state: AgentState):
-
-    log_node_start("validator", state)
 
     vector_docs = []
 
@@ -16,27 +15,29 @@ async def validator_node(state: AgentState):
     # Case 1 — no documents retrieved
     if not vector_docs or len(vector_docs) == 0:
 
+        metrics.log_validation(0.0)
+        
+
         retry_count = state.retry_count + 1
+
+        metrics.log_retry(retry_count)
         
         if retry_count > state.max_retries:
-            log_node_end("validator", state)
 
             return {
                 "validation_score": 0.0,
                 "needs_retry": False
             }
 
-        log_node_end("validator", state)
-
+        
+        
         return {
             "validation_score": 0.0,
             "needs_retry": True,
             "retry_count" : retry_count
         }
 
-    # Case 2 — retrieval looks valid
-    log_node_end("validator", state)
-
+    metrics.log_validation(1.0)
     return {
         "validation_score": 1.0,
         "needs_retry": False

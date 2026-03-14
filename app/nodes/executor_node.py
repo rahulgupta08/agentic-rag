@@ -1,16 +1,15 @@
 from app.agents.state import AgentState
-from app.utils.debug import log_node_start, log_node_end
 from app.mcp.client.mcp_singleton import mcp_client
+from app.core.observability import metrics
+
 
 
 def create_executor_node():
 
     async def executor_node(state: AgentState):
 
-        log_node_start("executor", state)
-
+        
         if not state.plan:
-            log_node_end("executor", state)
             return {}
 
         step = state.plan[0]
@@ -18,7 +17,11 @@ def create_executor_node():
         tool = step["tool"]
         tool_input = step.get("input", {})
 
+        metrics.log_tool(tool)
+
         result = await mcp_client.call_tool(tool, tool_input)
+
+        metrics.log_retrieval(result)
 
         new_results = state.tool_results + [{
             "tool": tool,
@@ -27,8 +30,6 @@ def create_executor_node():
         }]
 
         new_plan = state.plan[1:]
-
-        log_node_end("executor", state)
 
         return {
             "tool_results": new_results,

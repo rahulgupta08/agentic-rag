@@ -9,6 +9,8 @@ from pinecone import Pinecone, ServerlessSpec
 from dotenv import load_dotenv
 from app.embeddings.embedder_factory import get_embedder
 import sys
+from app.logging.logger import logger
+
 
 load_dotenv()
 
@@ -20,8 +22,8 @@ def get_vector_store():
     embedder = get_embedder()
     dimension = embedder.dimension
 
-    print('DIMENTION : -------- ', dimension, file= sys.stderr)
-    print('VECTOR_DB_PROVIDER' , VECTOR_DB_PROVIDER, file = sys.stderr)
+    logger.info(f"Vector Db Provider={VECTOR_DB_PROVIDER}")
+    logger.info(f"Vector Dimension={dimension}")
 
     if VECTOR_DB_PROVIDER == "pinecone":
         pc = Pinecone(api_key=PINECONE_API_KEY)

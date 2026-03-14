@@ -1,12 +1,10 @@
 from app.agents.state import AgentState
-from app.utils.debug import log_node_start, log_node_end
+
 
 
 
 async def tool_node(state: AgentState):
 
-    # Np tools yet
-    log_node_start("tool", state)
 
     # Just pass state through
 
@@ -18,7 +16,5 @@ async def tool_node(state: AgentState):
 
     
     state.tool_output = f"Tool {tool_name} executed (placeholder)"
-
-    log_node_end("tool", state)
 
     return state

@@ -2,6 +2,7 @@ import os
 
 import pdfplumber
 from pathlib import Path
+from app.logging.logger import logger
 
 
 class DocumentLoader:
@@ -9,9 +10,8 @@ class DocumentLoader:
     def __init__(self, file_path: str):
 
         self.file_path = file_path
-        print("Current directory in doc_loader class:", os.getcwd())
-        print("File path :", self.file_path)
-        print("File exists:", os.path.exists(self.file_path))
+        logger.info(f"Current directory in doc_loader class:={os.getcwd()}")
+        logger.info(f"File path ::={self.file_path}")
         if not Path(file_path).exists():
             raise FileNotFoundError(f"Document not found: {file_path}")
 
@@ -38,8 +38,9 @@ class DocumentLoader:
                             "text": text
                         }
                     )
-        print(f"Loaded document: {self.file_path}")
-        print(f"Pages extracted: {len(pages)}")
+
+        logger.info(f"Loaded document:={self.file_path}")
+        logger.info(f"Pages extracted: {len(pages)}")
 
         return {
             "file_path": self.file_path,

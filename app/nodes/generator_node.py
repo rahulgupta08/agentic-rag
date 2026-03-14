@@ -1,12 +1,10 @@
 from app.agents.state import AgentState
-from app.utils.debug import log_node_start, log_node_end
+from app.core.observability import metrics
 
 
 def create_generator_node(rag_service):
 
     async def generator_node(state: AgentState):
-
-        log_node_start("generator", state)
 
         query = state.query
 
@@ -40,6 +38,8 @@ def create_generator_node(rag_service):
 
         context = "\n\n".join(context_parts)
 
+        metrics.log_context_size(len(context_parts))
+
         # Call LLM
         answer = await rag_service.generate_from_context(
             query=query,
@@ -47,7 +47,7 @@ def create_generator_node(rag_service):
             #history=conversation_history
         )
 
-        log_node_end("generator", state)
+        
 
         return {
             "answer": answer.content,
