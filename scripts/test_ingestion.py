@@ -9,6 +9,8 @@ from app.embeddings.local_embedder import LocalEmbedder
 from app.schemas.embedding_record import EmbeddingRecordSchema
 from app.vectorstores.factory import get_vector_store
 from app.ingestion.metadata_extractor import extract_metadata_from_filename
+from app.logging.logger import logger
+
 import asyncio
 
 
@@ -21,10 +23,10 @@ def load_and_chunk_document():
         "data/raw_documents/aapl-10K_2024.pdf"
     )
 
-    print("File path:", loader.file_path)
+    logger.info(f"File path: {loader.file_path}")
     document_metadata = extract_metadata_from_filename(loader.file_path)
 
-    print("Extracted metadata:", document_metadata)
+    logger.info(f"Extracted metadata:", document_metadata)
     
 
     document = loader.load()
@@ -43,9 +45,9 @@ def load_and_chunk_document():
 
     )
 
-    print("Total chunks:", len(chunks))
+    logger.info(f"Total chunks: {len(chunks)} ")
 
-    print(chunks[2].metadata)
+    logger.info(f"Chunk Metadata:  {chunks[2].metadata}")
     embedder = LocalEmbedder()
 
 
@@ -55,7 +57,7 @@ def load_and_chunk_document():
     embeddings = asyncio.run(
                     embedder.embed_batch(text_for_embedding)
                     )
-    print("Embeddings generated ", len(embeddings))
+    logger.info(f"Embeddings generated  {len(embeddings)}")
 
     embedding_records = []
 
@@ -70,16 +72,16 @@ def load_and_chunk_document():
 
     
 
-    print("Embeddings created:", len(embedding_records))
+    logger.info(f"Embeddings created: {len(embedding_records)}")
    
     vectors_for_db = embedding_records_to_vectors(embedding_records)
 
-    print("vectors to be inserted : ", len(vectors_for_db))
+    logger.info(f"vectors to be inserted : {len(vectors_for_db)}")
 
     vector_store = get_vector_store()
     vector_store.upsert(vectors=vectors_for_db, namespace=collection)
 
-    print("Inserted vectors:", len(vectors_for_db))
+    logger.info(f"Inserted vectors: {len(vectors_for_db)}")
 
     
 

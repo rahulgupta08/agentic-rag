@@ -10,7 +10,8 @@ from app.nodes.router_node import create_router_node
 from app.nodes.executor_node import create_executor_node
 from app.nodes.generator_node import create_generator_node
 
-from app.nodes.validator_node import validator_node
+
+from app.nodes.validator_node import create_validator_node
 from app.tools.tool_registry import ToolRegistry
 from app.mcp.client.mcp_singleton import mcp_client
 
@@ -25,13 +26,16 @@ async def build_agent_graph_v2(rag_service):
         tool_registry.register(
             tool.name,
             tool.description,
-            "executor"
+            "executor",
+            capabilities=["retrieval"]
         )
 
     tool_registry.register(
         "generate",
         "Generate the final answer using available context",
-        "generator"
+        "generator",
+        capabilities=["generation"]
+
     )
     
 
@@ -43,6 +47,7 @@ async def build_agent_graph_v2(rag_service):
     executor_node = create_executor_node()
     planner_node = create_planner_node(llm, tool_registry)
     router_node = create_router_node(tool_registry)
+    validator_node = create_validator_node(tool_registry)
     
 
     # Register nodes

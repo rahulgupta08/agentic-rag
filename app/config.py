@@ -23,7 +23,6 @@ INGESTION_CONFIG = {
     "chunk_overlap": 120
 }
 
-
 # text-embedding-3-large	3072
 # text-embedding-3-small	1536
 # BAAI/bge-base-en-v1.5	768

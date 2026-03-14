@@ -3,42 +3,46 @@ from app.core.observability import metrics
 
 
 
-async def validator_node(state: AgentState):
+def create_validator_node(tool_registry):
 
-    vector_docs = []
+    async def validator_node(state: AgentState):
 
-    # Extract vector_search results
-    for result in state.tool_results:
-        if result["tool"] == "vector_search":
-            vector_docs = result.get("output", [])
+        retrieved_docs = []
 
-    # Case 1 — no documents retrieved
-    if not vector_docs or len(vector_docs) == 0:
+        for result in state.tool_results:
 
-        metrics.log_validation(0.0)
-        
+            tool_name = result["tool"]
 
-        retry_count = state.retry_count + 1
+            if tool_registry.has_capability(tool_name, "retrieval"):
+                retrieved_docs.extend(result.get("documents", []))
 
-        metrics.log_retry(retry_count)
-        
-        if retry_count > state.max_retries:
+
+        # Case 1 — no documents retrieved
+        if not retrieved_docs:
+
+            metrics.log_validation(0.0)
+
+            retry_count = state.retry_count + 1
+            metrics.log_retry(retry_count)
+
+            if retry_count > state.max_retries:
+
+                return {
+                    "validation_score": 0.0,
+                    "needs_retry": False
+                }
 
             return {
                 "validation_score": 0.0,
-                "needs_retry": False
+                "needs_retry": True,
+                "retry_count": retry_count
             }
 
-        
-        
+        metrics.log_validation(1.0)
+
         return {
-            "validation_score": 0.0,
-            "needs_retry": True,
-            "retry_count" : retry_count
+            "validation_score": 1.0,
+            "needs_retry": False
         }
 
-    metrics.log_validation(1.0)
-    return {
-        "validation_score": 1.0,
-        "needs_retry": False
-    }
+    return validator_node

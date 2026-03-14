@@ -3,12 +3,13 @@ class ToolRegistry:
     def __init__(self):
         self.tools = {}
 
-    def register(self, name, description, node):
+    def register(self, name, description, node,capabilities=None):
 
         self.tools[name] = {
             "name" : name,
             "description": description,
-            "node": node
+            "node": node,
+            "capabilities": capabilities or []
         }
 
     def get_tools(self):
@@ -16,6 +17,12 @@ class ToolRegistry:
 
     def get_node(self, tool_name):
         return self.tools.get(tool_name, {}).get("node")
+    
+    def has_capability(self, tool_name, capability):
+        tool = self.tools.get(tool_name)
+        if not tool:
+            return False
+        return capability in tool.get("capabilities", [])
 
     def format_for_prompt(self):
 

@@ -1,0 +1,12 @@
+[
+{
+    "id": "q1",
+    "question": "Who is the current CEO of Apple?",
+    "ground_truth": "Tim Cook is the CEO of Apple.",
+    "expected_tools": [
+      "web_search"
+    ],
+    "category": "general_company_info",
+    "difficulty": "easy"
+}
+]

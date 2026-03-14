@@ -1,0 +1,114 @@
+[
+  {
+    "id": "q1",
+    "question": "What were Apple's total net sales in fiscal year 2024?",
+    "ground_truth": "Apple reported approximately $391 billion in total net sales in fiscal year 2024.",
+    "expected_tools": [
+      "vector_search"
+    ],
+    "category": "financials",
+    "difficulty": "easy"
+  },
+  {
+    "id": "q2",
+    "question": "What are the main revenue segments of Google according to its 10-K filings?",
+    "ground_truth": "Google generates revenue primarily from Google Services, Google Cloud, and Other Bets.",
+    "expected_tools": [
+      "vector_search"
+    ],
+    "category": "business_model",
+    "difficulty": "easy"
+  },
+  {
+    "id": "q3",
+    "question": "What risks related to supply chain does Apple highlight in its 10-K?",
+    "ground_truth": "Apple highlights risks such as supply chain disruptions, geopolitical tensions, component shortages, and dependence on third-party manufacturers.",
+    "expected_tools": [
+      "vector_search"
+    ],
+    "category": "risk_factors",
+    "difficulty": "medium"
+  },
+  {
+    "id": "q4",
+    "question": "What products are included in Apple's Wearables, Home, and Accessories category?",
+    "ground_truth": "Apple's Wearables, Home, and Accessories include Apple Watch, AirPods, Apple TV, and HomePod products.",
+    "expected_tools": [
+      "vector_search"
+    ],
+    "category": "products",
+    "difficulty": "medium"
+  },
+  {
+    "id": "q5",
+    "question": "Who is the current CEO of Apple?",
+    "ground_truth": "Tim Cook is the CEO of Apple.",
+    "expected_tools": [
+      "web_search"
+    ],
+    "category": "general_company_info",
+    "difficulty": "easy"
+  },
+  {
+    "id": "q6",
+    "question": "When was Google founded?",
+    "ground_truth": "Google was founded in 1998 by Larry Page and Sergey Brin.",
+    "expected_tools": [
+      "web_search"
+    ],
+    "category": "company_history",
+    "difficulty": "easy"
+  },
+  {
+    "id": "q7",
+    "question": "What is Apple's current market capitalization?",
+    "ground_truth": "Apple's market capitalization fluctuates but is typically over two trillion dollars.",
+    "expected_tools": [
+      "web_search"
+    ],
+    "category": "market_data",
+    "difficulty": "medium"
+  },
+  {
+    "id": "q8",
+    "question": "How does Apple's services revenue compare to its latest reported financial performance?",
+    "ground_truth": "Apple's services segment contributes a significant portion of revenue and has grown consistently alongside total company revenue.",
+    "expected_tools": [
+      "vector_search",
+      "web_search"
+    ],
+    "category": "financial_analysis",
+    "difficulty": "hard"
+  },
+  {
+    "id": "q9",
+    "question": "How does Google's cloud business compare with other major cloud providers?",
+    "ground_truth": "Google Cloud is one of the top cloud providers globally alongside Amazon Web Services and Microsoft Azure.",
+    "expected_tools": [
+      "vector_search",
+      "web_search"
+    ],
+    "category": "industry_analysis",
+    "difficulty": "hard"
+  },
+  {
+    "id": "q10",
+    "question": "What recent developments have occurred in Apple's artificial intelligence strategy?",
+    "ground_truth": "Apple has recently expanded its AI capabilities including machine learning integrations and new AI-powered features.",
+    "expected_tools": [
+      "web_search"
+    ],
+    "category": "recent_news",
+    "difficulty": "medium"
+  },
+  {
+    "id": "q11",
+    "question": "How is Google using AI in its cloud services today?",
+    "ground_truth": "Google Cloud integrates AI services such as Vertex AI, machine learning APIs, and generative AI capabilities.",
+    "expected_tools": [
+      "web_search"
+    ],
+    "category": "ai",
+    "difficulty": "medium"
+  }
+]
