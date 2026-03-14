@@ -8,7 +8,7 @@
     ],
     "difficulty": "easy",
     "category": "general_company_info",
-    "answer": "The current CEO of Apple is Tim Cook.",
+    "answer": "The current CEO of Apple is Tim Cook. He has held the position since 2011.",
     "retrieved_docs": [],
     "tool_results": [
       {
@@ -16,39 +16,12 @@
         "input": {
           "query": "current CEO of Apple"
         },
-        "output": [
-          "type='text' text='{\\n  \"title\": \"Tim Cook - Wikipedia\",\\n  \"snippet\": \"15 hours ago -Timothy Donald Cook(born November 1, 1960) is an American business executive who has been the chief executive officer (CEO) of Apple since 2011. He had previously been the company\\'s chief operating officer under its co-founder Steve Jobs. Cook joined Apple in March 1998 as a senior vice president ...\",\\n  \"url\": \"https://en.wikipedia.org/wiki/Tim_Cook\"\\n}' annotations=None meta=None",
-          "type='text' text='{\\n  \"title\": \"Apple Leadership - Tim Cook - Apple\",\\n  \"snippet\": \"Tim Cookis the CEO of Apple and serves on its board of directors.\",\\n  \"url\": \"https://www.apple.com/leadership/tim-cook/\"\\n}' annotations=None meta=None",
-          "type='text' text='{\\n  \"title\": \"Tim Cook | Biography, Apple CEO, & Business Executive | Britannica Money\",\\n  \"snippet\": \"4, 2026, 3:47 PM ET(AP)...(Show more)Tim Cook(born November 1, 1960, Mobile, Alabama) is an American business executive who has been the chief executive officer (CEO) of Apple Inc.\",\\n  \"url\": \"https://www.britannica.com/money/Tim-Cook\"\\n}' annotations=None meta=None",
-          "type='text' text='{\\n  \"title\": \"Apple Leadership - Apple (IN)\",\\n  \"snippet\": \"Apple leadership biographies include Apple\u2019s executive team responsibilities and experience. Learn more about Apple\u2019s leadership team.\",\\n  \"url\": \"https://www.apple.com/in/leadership/\"\\n}' annotations=None meta=None",
-          "type='text' text='{\\n  \"title\": \"Zoom in on Tim Cook: Chief Executive Officer of Apple\",\\n  \"snippet\": \"Donald Cook, born on 1 November 1960 in Mobile, Alabama, is the current CEO of Apple Inc, one of the world\\'s most valuable companies. Succeeding Steve Jobs in 2011, Cook has transformed Apple into an even more successful company while maintaining ...\",\\n  \"url\": \"https://www.trainy.co/en/blog/Tim-Cook-CEO-Apple\"\\n}' annotations=None meta=None"
-        ],
         "documents": [
-          {
-            "text": "{\n  \"title\": \"Tim Cook - Wikipedia\",\n  \"snippet\": \"15 hours ago -Timothy Donald Cook(born November 1, 1960) is an American business executive who has been the chief executive officer (CEO) of Apple since 2011. He had previously been the company's chief operating officer under its co-founder Steve Jobs. Cook joined Apple in March 1998 as a senior vice president ...\",\n  \"url\": \"https://en.wikipedia.org/wiki/Tim_Cook\"\n}",
-            "source": "web",
-            "tool": "web_search"
-          },
-          {
-            "text": "{\n  \"title\": \"Apple Leadership - Tim Cook - Apple\",\n  \"snippet\": \"Tim Cookis the CEO of Apple and serves on its board of directors.\",\n  \"url\": \"https://www.apple.com/leadership/tim-cook/\"\n}",
-            "source": "web",
-            "tool": "web_search"
-          },
-          {
-            "text": "{\n  \"title\": \"Tim Cook | Biography, Apple CEO, & Business Executive | Britannica Money\",\n  \"snippet\": \"4, 2026, 3:47 PM ET(AP)...(Show more)Tim Cook(born November 1, 1960, Mobile, Alabama) is an American business executive who has been the chief executive officer (CEO) of Apple Inc.\",\n  \"url\": \"https://www.britannica.com/money/Tim-Cook\"\n}",
-            "source": "web",
-            "tool": "web_search"
-          },
-          {
-            "text": "{\n  \"title\": \"Apple Leadership - Apple (IN)\",\n  \"snippet\": \"Apple leadership biographies include Apple\u2019s executive team responsibilities and experience. Learn more about Apple\u2019s leadership team.\",\n  \"url\": \"https://www.apple.com/in/leadership/\"\n}",
-            "source": "web",
-            "tool": "web_search"
-          },
-          {
-            "text": "{\n  \"title\": \"Zoom in on Tim Cook: Chief Executive Officer of Apple\",\n  \"snippet\": \"Donald Cook, born on 1 November 1960 in Mobile, Alabama, is the current CEO of Apple Inc, one of the world's most valuable companies. Succeeding Steve Jobs in 2011, Cook has transformed Apple into an even more successful company while maintaining ...\",\n  \"url\": \"https://www.trainy.co/en/blog/Tim-Cook-CEO-Apple\"\n}",
-            "source": "web",
-            "tool": "web_search"
-          }
+          "type='text' text='{\\n  \"text\": \"Tim Cook - Wikipedia - Tim Cookis an American business executive who became the chief executive officer of Apple in 2011, after Steve Jobs\\'s resignation and death. He has led Apple to become the largest technology company by revenue, and has advocated for social and environmental causes.\",\\n  \"source\": \"https://en.wikipedia.org/wiki/Tim_Cook\",\\n  \"tool\": \"web_search\"\\n}' annotations=None meta=None",
+          "type='text' text='{\\n  \"text\": \"Apple Leadership - Tim Cook - Apple - Tim Cook is theCEO of Appleand serves on its boardofdirectors.\",\\n  \"source\": \"https://www.apple.com/leadership/tim-cook/\",\\n  \"tool\": \"web_search\"\\n}' annotations=None meta=None",
+          "type='text' text='{\\n  \"text\": \"Tim Cook - ForbesTim Cook | Biography,Apple CEO, & Business Executive | Britannica \u2026Tim Cook - ForbesTim Cook - WikipediaTim Cook - WikipediaTim Cook | Biography, Apple CEO, & Business Executive ...Timothy Donald Cook - AAPL | Apple Inc. - Wall Street JournalMeet Sabih Khan, Apple\u2019s new COO: CEO Tim Cook calls him a ...Tim Cook says late Apple cofounder Steve Jobs gave him this ... - 1 day ago \u00b7Tim Cook is theCEOofApple, one of the world\\'s most valuable companies. Cook, who became chief executive in 2011, had previously served as Apple\\'s chief operating officer under Steve Jobs.Who succeeded Steve Jobs as Apple CEO in 2011?Tim Cooksucceeded Steve Jobs as Apple CEO in 2011. Trump\\'s FTC chairman chides Apple boss Tim Cook for content of Apple news feed \u2022 Feb. 12, 2026, 5:12 PM ET (AP) Tim Cook (born November 1, 1960, Mobile, Alabama) is an American business executive who has been the chief executive officer (CEO) of Apple Inc. (AAPL) since 2011.Who owns Apple?Cook joinedApplein 1998, having worked briefly at PC-maker Compaq and for 12 years at IBM. Cook owns more than 3 million sharesof Apple, less than a 1% stake; he\\'s sold hundredsofmillionsofdollars\\' worthofshares over the years. Since 2005, he has also served on the boardofNike.Did Hillary Clinton consider Apple CEO Tim Cook for Vice President?\\\\\"Hillary Clinton\\'s campaign considered Apple CEO Tim Cook for vice president\\\\\". Business Insider. Archived from the original on October 25, 2016. Retrieved September 3, 2017. ^ Balakrishnan, Anita (September 20, 2017). \\\\\"CEO Tim Cook says Apple is pushing extremely hard on DACA: \\'I am personally shocked that there is even a discussion of this\\' \\\\\".Is Apple CEO Tim Cook hosting a fundraiser for Hillary Clinton?\\\\\"Apple CEO Tim CookIs Hosting a Fundraiser for Hillary Clinton\\\\\". www.fortune.com. Fortune. Archived from the original on September 3, 2017. Retrieved September 3, 2017. ^ Leswing, Kif (October 18, 2016). \\\\\"Hillary Clinton\\'s campaign considered Apple CEO Tim Cook for vice president\\\\\". Business Insider. Archived from the original on October 25, 2016.Learn aboutTim Cook,the American technology executive who became the CEO of Apple Inc. in 2011 after Steve Jobs\\' death. Find out his background, achievements, and challenges in leading one of the world\\'s most innovative companies.Timothy Donald Cook is Chief Executive Officer & Director atApple, Inc. since 2012 and has been with the company since 1998.On July 8,Appleannounced that Sabih Khan will take over as the new COO, stepping into the shoes of Jeff Williams. This marks a key leadership transition within Apple, with Khan officially assuming the role later this month. Sabih Khan, 58, has worked with Apple for nearly 30 years.2 days ago \u00b7AppleCEOTim Cook says the advice from Steve Jobs was a \u201cgift\u201d in leading the $3.83 trillion tech giant: \u201cI just put my head down and thought, \u2018I\u2019m going to be the best version of ...\",\\n  \"source\": \"https://www.forbes.com/profile/tim-cook/\",\\n  \"tool\": \"web_search\"\\n}' annotations=None meta=None",
+          "type='text' text='{\\n  \"text\": \"Tim Cook | Biography, Apple CEO, & Business Executive ... - Learn aboutTim Cook,the American technology executive who became the CEO of Apple Inc. in 2011 after Steve Jobs\\' death. Find out his background, achievements, and challenges in leading one of the world\\'s most innovative companies.\",\\n  \"source\": \"https://www.britannica.com/money/Tim-Cook\",\\n  \"tool\": \"web_search\"\\n}' annotations=None meta=None",
+          "type='text' text='{\\n  \"text\": \"Timothy Donald Cook - AAPL | Apple Inc. - Wall Street Journal - Timothy Donald Cook is Chief Executive Officer & Director atApple, Inc. since 2012 and has been with the company since 1998.\",\\n  \"source\": \"https://www.wsj.com/market-data/quotes/AAPL/company-people/executive-profile/76064380\",\\n  \"tool\": \"web_search\"\\n}' annotations=None meta=None"
         ]
       }
     ],

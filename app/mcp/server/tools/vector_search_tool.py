@@ -14,9 +14,13 @@ def register_vector_search_tool(mcp):
         results = []
 
         for doc in documents:
-            if hasattr(doc, "page_content"):
-                results.append(doc.page_content)
-            else:
-                results.append(str(doc))
+
+            text = doc.page_content if hasattr(doc, "page_content") else str(doc)
+
+            results.append({
+                "text": text,
+                "source": "vector_db",
+                "tool": "vector_search"
+            })
 
         return results

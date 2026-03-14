@@ -10,10 +10,16 @@ def register_web_search_tool(mcp):
 
         with DDGS() as ddgs:
             for r in ddgs.text(query, max_results=5):
+                title = r.get("title", "")
+                snippet = r.get("body", "")
+                url = r.get("href", "")
+
+                text = f"{title} - {snippet}"
+
                 results.append({
-                    "title": r.get("title"),
-                    "snippet": r.get("body"),
-                    "url": r.get("href")
+                    "text": text,
+                    "source": url,
+                    "tool": "web_search"
                 })
 
         return results

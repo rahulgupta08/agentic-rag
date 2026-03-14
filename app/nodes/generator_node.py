@@ -1,5 +1,7 @@
 from app.agents.state import AgentState
 from app.core.observability import metrics
+from app.logging.logger import logger
+
 
 
 def create_generator_node(rag_service):
@@ -10,31 +12,29 @@ def create_generator_node(rag_service):
 
         tool_results =  state.tool_results or []
 
-        # Build context from retrieved docs
+        # Build context from normalized documents
         context_parts = []
 
         for tool_result in tool_results:
-            tool_name = tool_result.get("tool")
-            output = tool_result.get("output", [])
+           
+            documents = tool_result.get("documents", [])
 
-            # Handle vector search results
-            if tool_name == "vector_search":
+            for doc in documents:
 
-                for doc in output:
-                    if hasattr(doc, "page_content"):
-                        context_parts.append(doc.page_content)
-                    else:
-                        context_parts.append(str(doc))
+                 # Case 1: normalized dict
+                if isinstance(doc, dict):
+                    text = doc.get("text")
 
-            # Handle web search results
-            elif tool_name == "web_search":
+                # Case 2: MCP TextContent object
+                elif hasattr(doc, "text"):
+                    text = doc.text
 
-                for result in output:
-                    if isinstance(result, dict):
-                        snippet = result.get("snippet", "")
-                        context_parts.append(snippet)
-                    else:
-                        context_parts.append(str(result))
+                else:
+                    text = str(doc)
+
+                if text:
+                    context_parts.append(text)
+
 
         context = "\n\n".join(context_parts)
 
@@ -47,7 +47,7 @@ def create_generator_node(rag_service):
             #history=conversation_history
         )
 
-        
+        logger.info(f"Generated Answer  {answer}")
 
         return {
             "answer": answer.content,
