@@ -1,11 +1,13 @@
+from app.bootstrap import bootstrap
+bootstrap()
+import logging
+logger = logging.getLogger(__name__)
 from openai import OpenAI
 from app.vectorstores.factory import get_vector_store
 from app.ingestion.embedder import embed_text
 from app.prompts.rag_prompt import RAGPromptBuilder
 from app.config import OPENAI_API_KEY
-import logging
 
-logger = logging.getLogger(__name__)
 
 MAX_CONTEXT_CHARS = 6000
 
@@ -18,8 +20,8 @@ class SimpleRAG:
     def retrieve(self, query: str, top_k: int = 4):
         query_vector = embed_text(query)
         
-        print("Query " , query)
-        print("Query vector " , len(query_vector))
+        logger.info(f"Query  {query}")
+        logger.info(f"Query vector {len(query_vector)}")
 
         #results = self.vector_store.query(
         results = self.vector_store.search(
@@ -42,18 +44,18 @@ class SimpleRAG:
             temperature=0
         )
 
-        print("LLM response: " , response)
+        logger.info(f"LLM response:  {response}")
 
         return response.choices[0].message.content
 
     def ask(self, question: str, top_k: int = 4):
 
-        print("Asking question: " , question)
+        logger.info(f"Asking question:  {question}")
 
         docs = self.retrieve(question, top_k=top_k)
 
         
-        print(f"No of docs retrieved" , len(docs))
+        
         logger.info(f"Retrieved {len(docs)} documents")
 
         if not docs:
@@ -63,13 +65,10 @@ class SimpleRAG:
                 "retrieved_docs": []
             }
         else:
-            print("\nRetrieved Documents:\n")
+            logger.info("Retrieved Documents:")
 
             for d in docs:
-                print("ID:", d.get("id"))
-                print("Score:", d.get("score"))
-                print("Preview:", d.get("text", "")[:200])
-                print("-" * 60)
+                logger.info(f" ID : {d.get("id")}, Score: {d.get("score")} ,Preview: {d.get("text", "")[:200]} {'-'* 60}")
 
         context = ""
 
@@ -78,7 +77,7 @@ class SimpleRAG:
                 break
             context += doc["text"] + "\n\n"
         
-        print("Context for generation: " , context)
+        logger.info(f"Context for generation: {context}")
 
         answer = self.generate(context=context, question=question)
 

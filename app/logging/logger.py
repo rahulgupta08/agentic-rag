@@ -1,17 +1,22 @@
 import logging
-import os
 
 LOG_FILE = "app.log"
 
-logger = logging.getLogger("agent")
 
-logger.setLevel(logging.INFO)
+def setup_logging():
 
-formatter = logging.Formatter(
-    "%(asctime)s | %(levelname)s | %(message)s"
-)
+    formatter = logging.Formatter(
+        "%(asctime)s | %(levelname)s | %(name)s | %(message)s"
+    )
 
-file_handler = logging.FileHandler(LOG_FILE)
-file_handler.setFormatter(formatter)
+    file_handler = logging.FileHandler(LOG_FILE)
+    file_handler.setFormatter(formatter)
 
-logger.addHandler(file_handler)
+    console_handler = logging.StreamHandler()
+    console_handler.setFormatter(formatter)
+
+    root_logger = logging.getLogger()
+    root_logger.setLevel(logging.INFO)
+
+    root_logger.addHandler(file_handler)
+    root_logger.addHandler(console_handler)

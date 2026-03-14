@@ -1,8 +1,12 @@
+from app.bootstrap import bootstrap
+bootstrap()
 from pathlib import Path
 from typing import List
 import json
 from pydantic import BaseModel, Field
-from app.logging.logger import logger
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 

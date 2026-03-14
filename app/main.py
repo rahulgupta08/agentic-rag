@@ -9,17 +9,13 @@ from app.core.exception_handlers import (
     generic_exception_handler,
 )
 from app.core.exceptions import RAGException
-from app.core.logging_config import setup_logging
-import logging
 
-setup_logging()
 
 app = FastAPI()
 
 app.add_exception_handler(RAGException, rag_exception_handler)
 app.add_exception_handler(Exception, generic_exception_handler)
 
-logger = logging.getLogger(__name__)
 
 router = APIRouter()
 retriever = Retriever(top_k=5)
@@ -32,7 +28,6 @@ class QueryRequest(BaseModel):
 
 @router.post("/retrieve")
 def retrieve(query: str):
-    logger.info("Retrieving Query"  , query)
     results = retriever.retrieve(query)
     return {"results": results}
 

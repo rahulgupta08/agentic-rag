@@ -1,8 +1,12 @@
+from app.bootstrap import bootstrap
+bootstrap()
 import os
 
 import pdfplumber
 from pathlib import Path
-from app.logging.logger import logger
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 class DocumentLoader:

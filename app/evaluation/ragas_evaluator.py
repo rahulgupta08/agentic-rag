@@ -1,3 +1,5 @@
+from app.bootstrap import bootstrap
+bootstrap()
 from dotenv import load_dotenv
 load_dotenv()
 
@@ -12,8 +14,10 @@ from ragas.metrics import (
     context_recall
 )
 
-from app.logging.logger import logger
 from langchain_community.embeddings import HuggingFaceEmbeddings
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 

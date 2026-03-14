@@ -1,5 +1,8 @@
-import asyncio
+from app.bootstrap import bootstrap
+bootstrap()
 import logging
+logger = logging.getLogger(__name__)
+import asyncio
 from typing import Dict
 
 
@@ -27,7 +30,7 @@ class RAGPipeline:
         5. Return structured response
         """
 
-        print("Running RAG pipeline for query: ", query)
+        logger.info(f"Running RAG pipeline for query:  {query}")
 
         # Run the synchronous RAGService.generate() inside a thread
         result = await asyncio.to_thread(
@@ -36,6 +39,6 @@ class RAGPipeline:
             top_k
         )
 
-        print("RAG pipeline completed")
+        logger.info("RAG pipeline completed")
 
         return result

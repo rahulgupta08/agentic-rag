@@ -1,15 +1,16 @@
 
+from app.bootstrap import bootstrap
+bootstrap()
+import logging
+logger = logging.getLogger(__name__)
 from pinecone import Pinecone, ServerlessSpec
 from app.config import PINECONE_API_KEY, PINECONE_INDEX_NAME
 from app.core.exceptions import VectorStoreError
-import logging
 import os
 from dotenv import load_dotenv
 import uuid
 
 load_dotenv()
-
-logger = logging.getLogger(__name__)
 
 pc = Pinecone(api_key=PINECONE_API_KEY)
 

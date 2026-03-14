@@ -1,6 +1,7 @@
-import os
-
-from openai import embeddings
+from app.bootstrap import bootstrap
+bootstrap()
+import logging
+logger = logging.getLogger(__name__)
 
 from app.ingestion.document_loader import DocumentLoader
 from app.ingestion.chunker_new import DocumentChunker
@@ -9,7 +10,6 @@ from app.embeddings.local_embedder import LocalEmbedder
 from app.schemas.embedding_record import EmbeddingRecordSchema
 from app.vectorstores.factory import get_vector_store
 from app.ingestion.metadata_extractor import extract_metadata_from_filename
-from app.logging.logger import logger
 
 import asyncio
 

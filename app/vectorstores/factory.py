@@ -1,4 +1,8 @@
-from app.config import VECTOR_DB_PROVIDER, PINECONE_API_KEY, PINECONE_INDEX_NAME, EMBEDDING_DIMENSION
+from app.bootstrap import bootstrap
+bootstrap()
+import logging
+logger = logging.getLogger(__name__)
+from app.config import VECTOR_DB_PROVIDER, PINECONE_API_KEY, PINECONE_INDEX_NAME
 from app.vectorstores.weaviate_store import WeaviateStore
 from app.vectorstores.pinecone_store import PineconeStore
 from app.core.exceptions import EmbeddingError
@@ -8,14 +12,10 @@ import weaviate
 from pinecone import Pinecone, ServerlessSpec
 from dotenv import load_dotenv
 from app.embeddings.embedder_factory import get_embedder
-import sys
-from app.logging.logger import logger
+
 
 
 load_dotenv()
-
-logger = logging.getLogger(__name__)
-
 
 def get_vector_store():
 

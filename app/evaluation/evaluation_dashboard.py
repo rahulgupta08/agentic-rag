@@ -1,4 +1,9 @@
-from app.logging.logger import logger
+from app.bootstrap import bootstrap
+bootstrap()
+
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 class EvaluationDashboard:

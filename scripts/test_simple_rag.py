@@ -1,3 +1,7 @@
+from app.bootstrap import bootstrap
+bootstrap()
+import logging
+logger = logging.getLogger(__name__)
 from app.rag.simple_rag import SimpleRAG
 
 def main():
@@ -6,22 +10,17 @@ def main():
 
     query = "What risk factors does Apple mention in the 10-K?"
 
-    print("\nQUERY:")
-    print(query)
+    logger.info(f"\nQUERY:\n{query}")
+
 
     response = rag.ask(question=query, top_k=10)
 
-    print("\nANSWER:")
-    print(response["answer"])
+    logger.info(f"\nANSWER:\n{response['answer']}")
 
-    print("\nRETRIEVED DOCUMENTS:")
 
-    # for i, doc in enumerate(response["retrieved_docs"], 1):
-    #     print(f"\nDocument {i}")
-    #     print("ID:", doc.get("id"))
-    #     print("Score:", doc.get("score"))
-    #     print("Preview:", doc.get("text", "")[:50])
+    logger.info("\nRETRIEVED DOCUMENTS:")
 
+    
 
 if __name__ == "__main__":
     main()

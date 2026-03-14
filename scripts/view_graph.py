@@ -16,7 +16,5 @@ async def main():
         f.write(png_bytes)
 
 
-    print(graph.get_graph().draw_mermaid())
-
 
 asyncio.run(main())

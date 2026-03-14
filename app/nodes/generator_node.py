@@ -1,6 +1,9 @@
+from app.bootstrap import bootstrap
+bootstrap()
+import logging
+logger = logging.getLogger(__name__)
 from app.agents.state import AgentState
 from app.core.observability import metrics
-from app.logging.logger import logger
 
 
 

@@ -1,8 +1,10 @@
+from app.bootstrap import bootstrap
+bootstrap()
 import logging
+logger = logging.getLogger(__name__)
 from app.config import OPENAI_API_KEY
 from app.core.exceptions import LLMGenerationError
 
-logger = logging.getLogger(__name__)
 
 try:
     from openai import OpenAI

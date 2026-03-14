@@ -1,5 +1,8 @@
+from app.bootstrap import bootstrap
+bootstrap()
+import logging
+logger = logging.getLogger(__name__)
 import asyncio
-from openai import OpenAI
 from langchain_openai import ChatOpenAI
 
 from app.rag.rag_pipeline import RAGPipeline
@@ -51,8 +54,7 @@ async def main():
 
     query = "What risk factors does Apple mention in the 10-K?"
 
-    print("\nQUERY:")
-    print(query)
+    logger.info(f"\nQUERY: {query}")
 
     rag_service = build_rag_service()
 
@@ -60,10 +62,10 @@ async def main():
 
     response = await pipeline.run(query)
 
-    print("\nANSWER:\n")
-    print(response["answer"])
+    logger.info(f"\nANSWER:\n{response['answer']}")
 
-    print("\nDOCUMENTS USED:", len(response["documents_used"]))
+
+    logger.info(f"\nDOCUMENTS USED: {len(response['documents'])}")
 
 
 if __name__ == "__main__":

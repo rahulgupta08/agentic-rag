@@ -1,8 +1,12 @@
 
-import logging
+from app.bootstrap import bootstrap
+bootstrap()
 from app.config import CHUNK_SIZE, CHUNK_OVERLAP
 from app.core.exceptions import ChunkingError
 from typing import List
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 

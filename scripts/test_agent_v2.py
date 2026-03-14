@@ -1,3 +1,7 @@
+from app.bootstrap import bootstrap
+bootstrap()
+import logging
+logger = logging.getLogger(__name__)
 import asyncio
 import uuid
 
@@ -5,7 +9,6 @@ from app.graph.agent_graph_v2 import build_agent_graph_v2
 from app.agents.state import AgentState
 from scripts.test_rag_pipeline import build_rag_service
 from app.mcp.client.mcp_singleton import mcp_client
-from app.logging.logger import logger
 
 
 

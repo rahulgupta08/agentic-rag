@@ -1,3 +1,7 @@
+from app.bootstrap import bootstrap
+bootstrap()
+import logging
+logger = logging.getLogger(__name__)
 import asyncio
 import json
 from pathlib import Path
@@ -6,7 +10,7 @@ from app.evaluation.offline_runner import OfflineEvaluationRunner
 from app.evaluation.context_extractor import ContextExtractor
 from app.evaluation.ragas_evaluator import RagasEvaluator
 from app.evaluation.evaluation_dashboard import EvaluationDashboard
-from app.logging.logger import logger
+
 
 
 
@@ -38,7 +42,7 @@ async def main():
 
     ragas_samples = extractor.build_ragas_dataset(results)
 
-    logger.info(f"RAGAS samples prepared: {len(ragas_samples)}")
+    if not ragas_samples: logger.warning("No samples available for RAGAS evaluation"); return
 
     # Run RAGAS evaluation
     evaluator = RagasEvaluator()

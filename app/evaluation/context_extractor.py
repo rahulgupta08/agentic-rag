@@ -1,5 +1,10 @@
+from app.bootstrap import bootstrap
+bootstrap()
 from typing import List, Dict, Any
-from app.logging.logger import logger
+import logging
+
+logger = logging.getLogger(__name__)
+
 
 
 class ContextExtractor:

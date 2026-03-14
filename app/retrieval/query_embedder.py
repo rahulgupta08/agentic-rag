@@ -1,10 +1,10 @@
 
-
+from app.bootstrap import bootstrap
+bootstrap()
 import logging
+logger = logging.getLogger(__name__)
 from app.core.exceptions import EmbeddingError
 from app.config import OPENAI_API_KEY, EMBEDDING_MODEL
-
-logger = logging.getLogger(__name__)
 
 try:
     from openai import OpenAI
