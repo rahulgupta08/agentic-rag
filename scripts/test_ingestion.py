@@ -2,88 +2,25 @@ from app.bootstrap import bootstrap
 bootstrap()
 import logging
 logger = logging.getLogger(__name__)
-
-from app.ingestion.document_loader import DocumentLoader
-from app.ingestion.chunker_new import DocumentChunker
-from app.ingestion.ingestion_utils import generate_document_id , embedding_records_to_vectors
-from app.embeddings.local_embedder import LocalEmbedder
-from app.schemas.embedding_record import EmbeddingRecordSchema
-from app.vectorstores.factory import get_vector_store
-from app.ingestion.metadata_extractor import extract_metadata_from_filename
-
+from app.factory import create_application
+from app.schemas.pipeline_inputs import IngestionInput
 import asyncio
 
 
-def load_and_chunk_document():
+async def main():
+    app = await create_application()
 
-
-    collection = "financial_documents"
-
-    loader = DocumentLoader(
-        "data/raw_documents/aapl-10K_2024.pdf"
-    )
-
-    logger.info(f"File path: {loader.file_path}")
-    document_metadata = extract_metadata_from_filename(loader.file_path)
-
-    logger.info(f"Extracted metadata:", document_metadata)
-    
-
-    document = loader.load()
-
-    document_id = generate_document_id(
-        "data/raw_documents/aapl-10K_2024.pdf"
-    )
-
-    chunker = DocumentChunker()
-
-    chunks = chunker.chunk(
-        document=document,
-        document_id=document_id,
-        collection=collection,
-        document_metadata=document_metadata
-
-    )
-
-    logger.info(f"Total chunks: {len(chunks)} ")
-
-    logger.info(f"Chunk Metadata:  {chunks[2].metadata}")
-    embedder = LocalEmbedder()
-
-
-    text_for_embedding = [chunk.text for chunk in chunks]
-
-    #embeddings = embedder.embed_batch(text_for_embedding)
-    embeddings = asyncio.run(
-                    embedder.embed_batch(text_for_embedding)
-                    )
-    logger.info(f"Embeddings generated  {len(embeddings)}")
-
-    embedding_records = []
-
-    for chunk, vector in zip(chunks, embeddings):
-        record = EmbeddingRecordSchema(
-            id=chunk.id,
-            vector=vector,
-            text=chunk.text,
-            metadata=chunk.metadata
+    try:
+        input = IngestionInput(
+            file_path="data/raw_documents/aapl-10K_2024.pdf"
         )
-        embedding_records.append(record)
 
-    
+        result = await app.ingest(input)
+        print(result)
 
-    logger.info(f"Embeddings created: {len(embedding_records)}")
-   
-    vectors_for_db = embedding_records_to_vectors(embedding_records)
+    finally:
+        await app.cleanup()
 
-    logger.info(f"vectors to be inserted : {len(vectors_for_db)}")
-
-    vector_store = get_vector_store()
-    vector_store.upsert(vectors=vectors_for_db, namespace=collection)
-
-    logger.info(f"Inserted vectors: {len(vectors_for_db)}")
-
-    
 
 if __name__ == "__main__":
-    load_and_chunk_document()
+    asyncio.run(main())
