@@ -25,19 +25,19 @@ from app.prompts.rag_prompt import RAGPromptBuilder
 from app.pipelines.ingestion_pipeline import IngestionPipeline
 from app.services.rag_service import RAGService
 from app.pipelines.evaluation_pipeline import EvaluationPipeline
+from app.agents.agent_state import AgentState
+
 
 from app.config import OPENAI_API_KEY
 
 # --- Agent ---
 from app.graph.agent_graph import build_agent_graph
-
-# --- Evaluation ---
-from app.evaluation.offline_runner import OfflineEvaluationRunner
 from app.mcp.client.mcp_singleton import mcp_client
 
 
 
-async def create_application():
+
+async def create_application() -> Application:
 
     # =========================================================
     # 1. SHARED COMPONENTS (Used across RAG + Agent)
@@ -88,24 +88,28 @@ async def create_application():
 
     agent_graph = await build_agent_graph(rag_service)
 
-    # Wrap agent execution so Application can call it uniformly
+    # NOTE:
+    # AgentWrapper is responsible for cleaning up shared resources
+    # like vector_store client and MCP client.
     class AgentWrapper:
-        async def run(self, state):
-            return await agent_graph.ainvoke(state)
-        
+        def __init__(self, graph, vector_store):
+            self.graph = graph
+            self.vector_store = vector_store
+
+        async def run(self, query: str, session_id: str):
+            state = AgentState(
+                session_id=session_id,
+                query=query
+            )
+            return await self.graph.ainvoke(state)
+
         async def cleanup(self):
-            # -----------------------------
-            # Vector DB cleanup
-            # -----------------------------
             client = getattr(self.vector_store, "client", None)
             if client:
                 client.close()
                 logger.info("Vector DB client closed")
 
-                # -----------------------------
-                # MCP cleanup
-                # -----------------------------
-                await mcp_client.close()
+            await mcp_client.close()
             logger.info("MCP client closed")
 
     agent = AgentWrapper(
@@ -123,16 +127,7 @@ async def create_application():
                             embedder=embedder
                         )
 
-    # =========================================================
-    # 5. EVALUATION (Offline Runner)
-    # =========================================================
-
-    class EvaluationWrapper:
-        def __init__(self):
-            self.runner = OfflineEvaluationRunner()
-
-        async def run(self, *args, **kwargs):
-            return await self.runner.run()
+    
 
     evaluator = EvaluationPipeline()
 

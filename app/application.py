@@ -20,20 +20,19 @@ class Application:
         self.agent = agent
         self.evaluator = evaluator
 
-    async def run_rag(self, input: RAGInput):
-        return await self.rag_pipeline.run(input.query)
+    async def run_rag(self, rag_input: RAGInput):
+        return await self.rag_pipeline.run(rag_input.query)
 
-    async def run_agent(self, input: AgentInput):
-        state = AgentState(
-            session_id=input.session_id,
-            query=input.query
+    async def run_agent(self, agent_input: AgentInput):
+        return await self.agent.run(
+            query=agent_input.query,
+            session_id=agent_input.session_id
         )
-        return await self.agent.run(state)
 
-    async def ingest(self, input: IngestionInput):
+    async def ingest(self, ingestion_input: IngestionInput):
         return await self.ingestion_pipeline.run(
-            file_path=input.file_path,
-            collection=input.collection
+            file_path=ingestion_input.file_path,
+            collection=ingestion_input.collection
         )
 
     async def evaluate(self):
