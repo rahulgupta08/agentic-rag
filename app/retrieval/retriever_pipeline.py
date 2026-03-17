@@ -1,4 +1,9 @@
 from app.retrieval.base_retriever import BaseRetriever
+from app.bootstrap import bootstrap
+bootstrap()
+
+import logging
+logger = logging.getLogger(__name__)
 
 
 class RetrieverPipeline(BaseRetriever):
@@ -19,11 +24,15 @@ class RetrieverPipeline(BaseRetriever):
 
     async def retrieve(self, query: str, top_k: int = 5):
 
-        original_query = query
+        logger.info(f"Original Query: {query}")
 
         # Step 1 — Query transform
         if self.query_transformer:
             query = await self.query_transformer.transform(query)
+            logger.info(f"Transformed Queries: {query}")
+        
+        
+        
 
         # Step 2 — Recall
         documents = await self.base_retriever.retrieve(query, top_k)

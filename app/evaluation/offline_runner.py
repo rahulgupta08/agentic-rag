@@ -6,8 +6,8 @@ from typing import List, Dict, Any
 from tqdm import tqdm
 
 from app.evaluation.dataset_builder import DatasetBuilder, EvaluationSample
-from app.graph.agent_graph_v2 import build_agent_graph_v2
-from app.agents.state import AgentState
+from app.graph.agent_graph import build_agent_graph
+from app.agents.agent_state import AgentState
 from scripts.test_rag_pipeline import build_rag_service
 from app.mcp.client.mcp_singleton import mcp_client
 import logging
@@ -30,7 +30,7 @@ class OfflineEvaluationRunner:
 
         self.rag_service = build_rag_service()
 
-        self.graph = await build_agent_graph_v2(self.rag_service)
+        self.graph = await build_agent_graph(self.rag_service)
 
     async def run(self) -> List[Dict[str, Any]]:
         """

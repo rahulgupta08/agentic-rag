@@ -16,17 +16,16 @@ from app.config import OPENAI_API_KEY
 
 from app.embeddings.local_embedder import LocalEmbedder
 
-# ✅ Current retriever (ACTIVE)
 from app.retrieval.dense_retriever import DenseRetriever
 from app.retrieval.retriever_pipeline import RetrieverPipeline
 
-# 🔥 Future-ready imports (NOT USED YET)
-# from app.retrieval.bm25_retriever import BM25Retriever
-# from app.retrieval.hybrid_retriever import HybridRetriever
-# from app.retrieval.fusion_strategy import WeightedFusion
+
 
 from app.rerankers.cross_encoder_reranker import CrossEncoderReranker
 from app.prompts.rag_prompt import RAGPromptBuilder
+from app.query.rewriting.llm_query_rewriter import LLMQueryRewriter
+
+
 
 load_dotenv()
 
@@ -52,15 +51,7 @@ def build_rag_service():
         batch_size=16,
     )
 
-    # -----------------------------
-    # Retriever Pipeline
-    # -----------------------------
-    retriever = RetrieverPipeline(
-        base_retriever=base_retriever,
-        reranker=reranker,
-        # post_processors=[]  # keep optional
-        logger=logger
-    )
+   
 
     # -----------------------------
     # LLM
@@ -70,6 +61,19 @@ def build_rag_service():
         model="gpt-4o-mini",
         temperature=0
     )
+
+    query_rewriter = LLMQueryRewriter(llm=llm)
+
+     # -----------------------------
+    # Retriever Pipeline
+    # -----------------------------
+    retriever = RetrieverPipeline(
+        base_retriever=base_retriever,
+        reranker=reranker,
+        query_transformer=query_rewriter,   
+        logger=logger
+    )
+
 
     # -----------------------------
     # Prompt Builder

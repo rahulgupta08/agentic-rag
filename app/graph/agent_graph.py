@@ -1,7 +1,7 @@
 from langgraph.graph import StateGraph, END
 
-from app.agents import state
-from app.agents.state import AgentState
+from app.agents import agent_state
+from app.agents.agent_state import AgentState
 
 from app.core.memory_reader import memory_reader_node
 from app.core.memory_writer import memory_writer_node
@@ -16,7 +16,7 @@ from app.tools.tool_registry import ToolRegistry
 from app.mcp.client.mcp_singleton import mcp_client
 
 
-async def build_agent_graph_v2(rag_service):
+async def build_agent_graph(rag_service):
 
     tool_registry = ToolRegistry()
 

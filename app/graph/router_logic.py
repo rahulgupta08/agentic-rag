@@ -1,4 +1,4 @@
-from app.agents.state import AgentState
+from app.agents.agent_state import AgentState
 from app.tools.tool_registry import tool_registry
 from app.core.observability import metrics
 

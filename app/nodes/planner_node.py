@@ -1,5 +1,5 @@
 import json
-from app.agents.state import AgentState
+from app.agents.agent_state import AgentState
 from app.core.observability import metrics
 
 

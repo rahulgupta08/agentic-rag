@@ -1,4 +1,4 @@
-from app.agents.state import AgentState
+from app.agents.agent_state import AgentState
 from app.mcp.client.mcp_singleton import mcp_client
 from app.core.observability import metrics
 
