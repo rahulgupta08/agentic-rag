@@ -19,6 +19,7 @@ from app.retrieval.dense_retriever import DenseRetriever
 from app.retrieval.retriever_pipeline import RetrieverPipeline
 
 from app.query.rewriting.llm_query_rewriter import LLMQueryRewriter
+from app.query.expansion.llm_query_expander import LLMQueryExpander
 from app.rerankers.cross_encoder_reranker import CrossEncoderReranker
 
 from app.prompts.rag_prompt import RAGPromptBuilder
@@ -55,6 +56,8 @@ async def create_application() -> Application:
     dense_retriever = DenseRetriever(vector_store, embedder)
 
     query_rewriter = LLMQueryRewriter(llm=llm)
+    query_expander = LLMQueryExpander(llm)
+
 
     reranker = CrossEncoderReranker(
         model_name="cross-encoder/ms-marco-MiniLM-L-6-v2",
@@ -65,6 +68,7 @@ async def create_application() -> Application:
         base_retriever=dense_retriever,
         reranker=reranker,
         query_transformer=query_rewriter,
+        query_expander=query_expander,
         logger=logger
     )
 

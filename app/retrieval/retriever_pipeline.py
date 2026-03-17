@@ -1,11 +1,10 @@
-from app.retrieval.base_retriever import BaseRetriever
+
 from app.bootstrap import bootstrap
 bootstrap()
-
 import logging
-from typing import List, Dict
-
 logger = logging.getLogger(__name__)
+from app.retrieval.base_retriever import BaseRetriever
+from typing import List, Dict
 
 
 class RetrieverPipeline(BaseRetriever):
@@ -15,6 +14,7 @@ class RetrieverPipeline(BaseRetriever):
         base_retriever,
         reranker=None,
         query_transformer=None,
+        query_expander=None,   
         post_processors=None,
         logger=None,
         confidence_threshold: float = 0.5,
@@ -22,6 +22,7 @@ class RetrieverPipeline(BaseRetriever):
         self.base_retriever = base_retriever
         self.reranker = reranker
         self.query_transformer = query_transformer
+        self.query_expander = query_expander   
         self.post_processors = post_processors or []
         self.logger = logger or logging.getLogger(__name__)
         self.confidence_threshold = confidence_threshold
@@ -31,11 +32,12 @@ class RetrieverPipeline(BaseRetriever):
         self.logger.info(f"Original Query: {query}")
 
         # -------------------------
-        # Step 1 — Query transform
+        # Step 1 — Query Rewrite
         # -------------------------
         if self.query_transformer:
-            query = await self.query_transformer.transform(query)
-            self.logger.info(f"Transformed Query: {query}")
+            queries = await self.query_transformer.transform(query)
+            query = queries[0]  # rewriter returns single-item list
+            self.logger.info(f"Rewritten Query: {query}")
 
         # -------------------------
         # Step 2 — Initial Retrieval
@@ -53,7 +55,7 @@ class RetrieverPipeline(BaseRetriever):
             )
 
         # -------------------------
-        # Step 4 — Confidence Scoring
+        # Step 4 — Confidence
         # -------------------------
         confidence = self._compute_confidence(documents)
 
@@ -64,14 +66,54 @@ class RetrieverPipeline(BaseRetriever):
         )
 
         # -------------------------
-        # Step 5 — Decision Layer
+        # Step 5 — Adaptive Retrieval
         # -------------------------
-        if confidence < self.confidence_threshold:
+        if confidence < self.confidence_threshold and self.query_expander:
+
             self.logger.warning(
-                "Low confidence detected → adaptive retrieval needed (Phase 3 next step)"
+                        "[RETRIEVER] Low confidence=%.4f → triggering expansion",
+                        confidence
+                    )
+
+            expanded_queries = await self.query_expander.transform(query)
+
+            self.logger.info(
+                "[RETRIEVER] Expanded Queries (%d): %s",
+                len(expanded_queries),
+                expanded_queries
             )
-            # For now: return current docs (no expansion yet)
-            # Next step will plug adaptive retrieval here
+
+            extra_docs = []
+
+            for q in expanded_queries:
+                docs = await self.base_retriever.retrieve(q, top_k)
+                extra_docs.extend(docs)
+
+            self.logger.info(
+                "[RETRIEVER] Retrieved extra docs=%d",
+                len(extra_docs)
+            )
+
+            # Merge
+            documents = self._merge_documents(documents, extra_docs)
+
+            self.logger.info(
+                "[RETRIEVER] After merge docs=%d",
+                len(documents)
+            )
+
+            # Final rerank
+            if self.reranker:
+                documents = await self.reranker.rerank(
+                    query,
+                    documents,
+                    top_k=top_k
+                )
+
+            self.logger.info(
+                "[RETRIEVER] Final docs after rerank=%d",
+                len(documents)
+            )
 
         # -------------------------
         # Step 6 — Post-processing
@@ -82,46 +124,91 @@ class RetrieverPipeline(BaseRetriever):
         return documents
 
     # -------------------------
-    # Internal Helpers
+    # Helpers
     # -------------------------
 
     def _compute_confidence(self, documents: List[Dict]) -> float:
-        """
-        Compute confidence based on available scores.
-        Priority:
-        1. reranker_score
-        2. rerank_score
-        3. base score
-        """
 
         if not documents:
             return 0.0
 
-        scores = []
+        weighted_scores = []
+        weights = []
 
-        for doc in documents:
+        for i, doc in enumerate(documents):
 
             if not isinstance(doc, dict):
                 continue
 
             score = None
 
-            # Priority 1 — CrossEncoder
+            # -------------------------
+            # Normalize scores
+            # -------------------------
+
             if "reranker_score" in doc:
-                score = doc["reranker_score"]
+                score = self._normalize_reranker_score(doc["reranker_score"])
 
-            # Fallback — base retriever
             elif "score" in doc:
-                score = doc["score"]
+                score = float(doc["score"])  # already 0–1
 
-            if score is not None:
-                try:
-                    scores.append(float(score))
-                except:
-                    continue
+            if score is None:
+                continue
 
-        if not scores:
+            # -------------------------
+            # Top-weighted importance
+            # -------------------------
+            weight = 1 / (i + 1)
+
+            weighted_scores.append(score * weight)
+            weights.append(weight)
+
+        if not weights:
             return 0.0
 
-        # Simple average (stable + sufficient for now)
-        return sum(scores) / len(scores)
+        return sum(weighted_scores) / sum(weights)
+
+    def _merge_documents(
+        self,
+        docs1: List[Dict],
+        docs2: List[Dict]
+    ) -> List[Dict]:
+
+        seen = set()
+        merged = []
+
+        for doc in docs1 + docs2:
+
+            text = doc.get("text", "").strip()
+
+            if not text:
+                continue
+
+            if text in seen:
+                continue
+
+            seen.add(text)
+            merged.append(doc)
+
+        return merged
+    
+    def _normalize_reranker_score(self, score: float) -> float:
+        """
+        Normalize reranker scores to 0–1.
+        Handles:
+        - CrossEncoder (-10 to +10)
+        - LLM (0 to 1)
+        """
+
+        try:
+            score = float(score)
+        except:
+            return 0.0
+
+        # If already in [0,1]
+        if 0.0 <= score <= 1.0:
+            return score
+
+        # CrossEncoder normalization (sigmoid)
+        import math
+        return 1 / (1 + math.exp(-score))
