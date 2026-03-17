@@ -18,12 +18,12 @@ class LLMReranker(BaseReranker):
 
         for doc in documents:
             score = await self._score(query, doc["text"])
-            doc["rerank_score"] = score
+            doc["reranker_score"] = score
             scored_docs.append(doc)
 
         # Sort descending
         scored_docs.sort(
-            key=lambda x: x["rerank_score"],
+            key=lambda x: x["reranker_score"],
             reverse=True
         )
 

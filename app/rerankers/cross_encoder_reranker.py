@@ -80,11 +80,11 @@ class CrossEncoderReranker(BaseReranker):
 
                 score = float(score)
 
-                # ✅ Handle dict documents
+                #  Handle dict documents
                 if isinstance(doc, dict):
                     doc["reranker_score"] = score
 
-                # ✅ Handle object documents
+                #  Handle object documents
                 else:
                     if not hasattr(doc, "metadata") or doc.metadata is None:
                         doc.metadata = {}
