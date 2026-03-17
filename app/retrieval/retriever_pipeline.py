@@ -8,11 +8,13 @@ class RetrieverPipeline(BaseRetriever):
         base_retriever,
         reranker=None,
         query_transformer=None,
+        post_processors=None,
         logger=None
     ):
         self.base_retriever = base_retriever
         self.reranker = reranker
         self.query_transformer = query_transformer
+        self.post_processors = post_processors or []
         self.logger = logger
 
     async def retrieve(self, query: str, top_k: int = 5):
@@ -33,13 +35,9 @@ class RetrieverPipeline(BaseRetriever):
                 documents,
                 top_k=top_k
             )
-        else:
-            documents = documents[:top_k]
 
-        # Step 4 — Logging
-        if self.logger:
-            for i, doc in enumerate(documents):
-                score = doc.metadata.get("reranker_score", None)
-                await self.logger.log(f"[RERANKED {i}] score={score} | {doc.page_content[:80]}")
+        for processor in self.post_processors:
+            docs = processor.process(docs)
+
 
         return documents

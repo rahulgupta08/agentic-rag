@@ -12,4 +12,4 @@ langsmith
 ddgs
 mcp
 anyio
-rich
+rank_bm25
