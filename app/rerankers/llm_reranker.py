@@ -1,5 +1,5 @@
 from typing import List, Dict
-from .base_reranker import BaseReranker
+from app.rerankers.base_reranker import BaseReranker
 
 
 class LLMReranker(BaseReranker):

@@ -5,7 +5,6 @@ class DenseRetriever(BaseRetriever):
     def __init__(self, vector_store, embedder, reranker=None):
         self.vector_store = vector_store
         self.embedder = embedder
-        self.reranker = reranker
 
     async def retrieve(self, query: str, top_k: int = 5):
 
@@ -13,18 +12,8 @@ class DenseRetriever(BaseRetriever):
         query_vector = await self.embedder.embed_query(query)
 
         # Step 2 — Retrieve broader set (recall stage)
-        documents =  await self.vector_store.dense_search(query_vector, top_k)
+        recall_k = max(top_k * 4, 20)  # configurable later
 
-        if self.reranker:
-             documents = await self.reranker.rerank(
-                 query,
-                 documents,
-                 top_k= top_k
-
-             )
-        else:
-            documents = documents[:top_k]
-
-        
+        documents =  await self.vector_store.dense_search(query_vector, recall_k)
 
         return documents

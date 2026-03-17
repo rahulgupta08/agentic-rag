@@ -7,4 +7,6 @@ class HybridRetriever(BaseRetriever):
         self.alpha = alpha
 
     async def retrieve(self, query: str, top_k: int = 5):
-        return await self.store.hybrid_search(query, top_k, self.alpha) 
+        recall_k = max(top_k * 4, 20)
+
+        return await self.store.hybrid_search(query, recall_k, self.alpha) 

@@ -12,6 +12,9 @@ from app.vectorstores.factory import get_vector_store
 from app.prompts.rag_prompt import RAGPromptBuilder
 from app.config import OPENAI_API_KEY
 from app.embeddings.local_embedder import LocalEmbedder
+from app.retrieval.retriever_pipeline import RetrieverPipeline
+from app.rerankers.cross_encoder_reranker import CrossEncoderReranker
+
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -24,13 +27,18 @@ def build_rag_service():
 
     embedder = LocalEmbedder()
 
+    base_retriever = DenseRetriever(vector_store, embedder)
 
-    # Retriever
-    retriever = DenseRetriever(
-        vector_store=vector_store,
-        embedder=embedder,      # assuming embedder handled elsewhere
-        reranker=None
+    reranker = CrossEncoderReranker(
+        model_name="cross-encoder/ms-marco-MiniLM-L-6-v2",
+        batch_size=16,
     )
+
+    retriever = RetrieverPipeline(
+        base_retriever=base_retriever,
+        reranker=reranker,
+    )
+
 
     # LLM
     llm = ChatOpenAI(api_key=OPENAI_API_KEY,
