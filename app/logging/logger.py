@@ -5,6 +5,11 @@ LOG_FILE = "app.log"
 
 def setup_logging():
 
+    logger = logging.getLogger()
+
+    if logger.handlers:
+        return
+
     formatter = logging.Formatter(
         "%(asctime)s | %(levelname)s | %(name)s | %(message)s"
     )

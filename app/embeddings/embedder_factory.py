@@ -4,21 +4,28 @@ from .openai_embedder import OpenAIEmbedder
 from .local_embedder import LocalEmbedder
 
 
-def get_embedder():
+def get_embedder(provider: str = None, **kwargs):
+    """
+    Returns an embedder instance.
 
-    provider = INGESTION_CONFIG["embedding_provider"]
+    Args:
+        provider (str): embedding provider ("local", "openai")
+        kwargs: optional config params
 
-    if provider == "openai":
+    Returns:
+        Embedder instance
+    """
 
-        return OpenAIEmbedder(
-            model=INGESTION_CONFIG["embedding_model"]
-        )
+    # Backward compatibility (existing behavior)
+    if provider is None:
+        # Keep current default logic here
+        return LocalEmbedder()
 
-    elif provider == "local":
+    if provider == "local":
+        return LocalEmbedder(**kwargs)
 
-        return LocalEmbedder(
-            model_name=INGESTION_CONFIG["local_embedding_model"]
-        )
+    elif provider == "openai":
+        return OpenAIEmbedder(**kwargs)
 
     else:
-        raise ValueError("Unsupported embedding provider")
+        raise ValueError(f"Unknown embedding provider: {provider}")

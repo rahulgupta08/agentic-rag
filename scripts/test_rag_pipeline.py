@@ -65,7 +65,7 @@ async def main():
     logger.info(f"\nANSWER:\n{response['answer']}")
 
 
-    logger.info(f"\nDOCUMENTS USED: {len(response['documents'])}")
+    #logger.info(f"\nDOCUMENTS USED: {len(response['documents'])}")
 
 
 if __name__ == "__main__":
