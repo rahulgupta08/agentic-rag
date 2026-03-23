@@ -3,13 +3,12 @@ import os
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 from app.graph.agent_graph import build_agent_graph
-from scripts.test_rag_pipeline import build_rag_service
 import asyncio
 
 async def main():
 
-    rag_service = build_rag_service()
-    graph = await build_agent_graph(rag_service)
+    #rag_service = build_rag_service()
+    graph = []#await build_agent_graph(rag_service)
     png_bytes =  graph.get_graph().draw_mermaid_png()
 
     with open("data/graph_with_mcp_v2.png", "wb") as f:

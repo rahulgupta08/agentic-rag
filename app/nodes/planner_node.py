@@ -1,6 +1,8 @@
 import json
 from app.agents.agent_state import AgentState
 from app.core.observability import metrics
+import logging
+logger = logging.getLogger(__name__)
 
 
 
@@ -20,9 +22,11 @@ def create_planner_node(llm, tool_registry):
 
             for result in state.tool_results:
                 tool_name = result.get("tool")
-                output = result.get("output")
+                #output = result.get("output")
+                documents = result.get("documents", [])
+                logger.info(f"From tool {tool_name} documents fetched  {documents}")
 
-                if not output:
+                if not documents:
                     history_lines.append(f"{tool_name} → returned no results")
                 else:
                     history_lines.append(f"{tool_name} → returned results")
@@ -30,117 +34,153 @@ def create_planner_node(llm, tool_registry):
             tool_history = "\nPrevious tool attempts:\n" + "\n".join(history_lines)
 
         prompt = f"""
-        You are an AI planning agent responsible for deciding how to answer a user question using available tools.
+            You are an AI planning agent responsible for deciding how to answer a user query using available tools.
 
-        Your task is to create a step-by-step plan that uses the provided tools to gather information and produce the final answer.
+            Your role is to create a precise, step-by-step execution plan. You DO NOT execute tools. You ONLY return the plan.
 
-        You do NOT execute tools yourself. You only create the plan.
+            --------------------------------------------------
+            AVAILABLE TOOLS
+            --------------------------------------------------
 
-        --------------------------------------------------
-        AVAILABLE TOOLS
-        --------------------------------------------------
+            {tools_description}
 
-        {tools_description}
+            Each tool has a defined purpose. You must strictly choose from these tools only.
 
-        Each tool has a specific capability. Choose the tools that best help answer the user query.
+            --------------------------------------------------
+            PREVIOUS TOOL ATTEMPTS
+            --------------------------------------------------
 
-        --------------------------------------------------
-        PREVIOUS TOOL ATTEMPTS
-        --------------------------------------------------
+            {tool_history if tool_history else "No previous attempts."}
 
-        {tool_history if tool_history else "No previous attempts."}
+            If a tool previously returned no useful results, avoid repeating it unless absolutely necessary.
 
-        If a tool previously returned no useful results, avoid repeating it unless absolutely necessary.
+            --------------------------------------------------
+            TOOL SELECTION POLICY (CRITICAL)
+            --------------------------------------------------
 
-        --------------------------------------------------
-        PLANNING STRATEGY
-        --------------------------------------------------
+            You MUST follow these rules strictly:
 
-        Follow these guidelines:
+            1. vector_search:
+            - Use ONLY for internal knowledge base queries
+            - Use when the query refers to:
+                - ingested documents
+                - internal data
+                - domain-specific stored knowledge
+            - DO NOT use for real-time or current information
 
-        1. Understand what the user is asking.
-        2. Decide which information sources are required.
-        3. Select appropriate tools to retrieve that information.
-        4. Use multiple tools if necessary.
-        5. After gathering information, use the "generate" step to produce the final answer.
+            2. search:
+            - Use for external, real-time, or dynamic information
+            - ALWAYS use for queries involving:
+                - "latest", "current", "today", "recent"
+                - stock prices, news, weather, live data
+                - anything that changes over time
 
-        Examples:
+            3. Multi-step queries:
+            - Use BOTH tools if needed
+            - Example:
+                - internal data → vector_search
+                - live data → search
 
-        Example 1 — Internal document question:
+            4. If unsure:
+            - Prefer search over vector_search
 
-        Query:
-        "What was Apple's revenue growth in 2023?"
+            5. Post-processing requirement:
+            - When using "search", you MUST follow it with "extract" or "summarize"
+            - Because search results are unstructured and not directly usable
 
-        Plan:
-        [
-        {{
-            "tool": "vector_search",
-            "input": {{"query": "Apple revenue growth 2023"}}
-        }},
-        {{
-            "tool": "generate"
-        }}
-        ]
+            --------------------------------------------------
+            PLANNING STRATEGY
+            --------------------------------------------------
 
-        Example 2 — Current information:
+            Follow these steps:
 
-        Query:
-        "What is Apple's stock price today?"
+            1. Understand the intent of the query
+            2. Identify whether the query requires:
+            - internal knowledge
+            - external / real-time knowledge
+            3. Select the correct tool(s)
+            4. Minimize unnecessary steps
+            5. Always end with "generate"
 
-        Plan:
-        [
-        {{
-            "tool": "web_search",
-            "input": {{"query": "Apple current stock price"}}
-        }},
-        {{
-            "tool": "generate"
-        }}
-        ]
+            --------------------------------------------------
+            EXAMPLES
+            --------------------------------------------------
 
-        Example 3 — Multi-source query:
+            Example 1 — Internal knowledge:
 
-        Query:
-        "What was Apple's revenue in the 2023 10K and what is its current stock price?"
+            Query:
+            "What does the internal document say about Apple revenue?"
 
-        Plan:
-        [
-        {{
-            "tool": "vector_search",
-            "input": {{"query": "Apple revenue 2023 10K"}}
-        }},
-        {{
-            "tool": "web_search",
-            "input": {{"query": "Apple stock price today"}}
-        }},
-        {{
-            "tool": "generate"
-        }}
-        ]
+            Plan:
+            [
+            {{
+                "tool": "vector_search",
+                "input": {{"query": "Apple revenue internal documents"}}
+            }},
+            {{
+                "tool": "generate"
+            }}
+            ]
 
-        --------------------------------------------------
-        IMPORTANT RULES
-        --------------------------------------------------
+            Example 2 — Real-time query:
 
-        - Always return a valid JSON array.
-        - Each step must contain a "tool".
-        - Include an "input" object when the tool requires parameters.
-        - Always end the plan with the "generate" tool.
-        - Do not repeat tools that previously failed unless necessary.
-        - Do not include explanations or text outside the JSON.
+            Query:
+            "What is Apple's latest stock price?"
 
-        --------------------------------------------------
-        USER QUERY
-        --------------------------------------------------
+            Plan:
+            [
+            {{
+                "tool": "search",
+                "input": {{"query": "Apple latest stock price"}}
+            }},
+            {{
+                "tool": "generate"
+            }}
+            ]
 
-        {query}
+            Example 3 — Hybrid query:
 
-        --------------------------------------------------
-        OUTPUT FORMAT
-        --------------------------------------------------
+            Query:
+            "What was Apple's 2023 revenue and what is its current stock price?"
 
-        Return ONLY the JSON plan.
-        """
+            Plan:
+            [
+            {{
+                "tool": "search",
+                "input": {{"query": "Apple latest stock price"}}
+            }},
+            {{
+                "tool": "extract"
+            }},
+            {{
+                "tool": "generate"
+            }}
+            ]
+
+            --------------------------------------------------
+            IMPORTANT RULES
+            --------------------------------------------------
+
+            - ONLY use tools listed in AVAILABLE TOOLS
+            - NEVER invent tool names
+            - ALWAYS return valid JSON array
+            - ALWAYS end with "generate"
+            - DO NOT include any explanation outside JSON
+            - NEVER go directly from "search" to "generate"
+            - ALWAYS insert "extract" or "summarize" after "search"
+
+            --------------------------------------------------
+            USER QUERY
+            --------------------------------------------------
+
+            {query}
+
+            --------------------------------------------------
+            OUTPUT FORMAT
+            --------------------------------------------------
+
+            Return ONLY the JSON plan.
+            """
 
         response = await llm.ainvoke(prompt,temperature = 0)
 

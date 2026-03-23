@@ -12,7 +12,7 @@
     "retrieved_docs": [],
     "tool_results": [
       {
-        "tool": "web_search",
+        "tool": "search",
         "input": {
           "query": "current CEO of Apple"
         },

@@ -1,3 +1,7 @@
+from app.bootstrap import bootstrap
+bootstrap()
+import logging
+logger = logging.getLogger(__name__)
 from app.factory import create_application
 from app.schemas.pipeline_inputs import AgentInput
 import asyncio
@@ -9,7 +13,7 @@ async def main():
 
     try:
         input = AgentInput(
-            query="What is Apple's latest stock price?",
+            query="Reliance Industries stock price ",
             session_id=str(uuid.uuid4())
         )
 

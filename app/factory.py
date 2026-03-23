@@ -133,7 +133,7 @@ async def create_application() -> Application:
 
     
 
-    evaluator = EvaluationPipeline()
+    evaluator = EvaluationPipeline(rag_service)
 
     # =========================================================
     # 6. APPLICATION

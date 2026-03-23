@@ -23,12 +23,20 @@ async def build_agent_graph(rag_service):
     tools = await mcp_client.list_tools()
 
     for tool in tools:
-        tool_registry.register(
-            tool.name,
-            tool.description,
-            "executor",
-            capabilities=["retrieval"]
-        )
+            tool_registry.register(
+                tool["name"],
+                tool["description"],
+                "executor",
+                capabilities=["retrieval"]
+            )
+
+    tool_registry.register(
+        "vector_search",
+        "Search internal knowledge base",
+        "executor",
+        capabilities=["retrieval"]
+    )
+
 
     tool_registry.register(
         "generate",
@@ -44,7 +52,7 @@ async def build_agent_graph(rag_service):
     # Inject dependencies
     generator_node = create_generator_node(rag_service)
 
-    executor_node = create_executor_node()
+    executor_node = create_executor_node(rag_service)
     planner_node = create_planner_node(llm, tool_registry)
     router_node = create_router_node(tool_registry)
     validator_node = create_validator_node(tool_registry)

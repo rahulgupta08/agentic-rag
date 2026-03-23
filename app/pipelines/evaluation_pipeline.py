@@ -19,10 +19,11 @@ RAGAS_REPORT_PATH = Path("data/ragas_report.json")
 
 class EvaluationPipeline:
 
-    def __init__(self):
-        self.runner = OfflineEvaluationRunner()
+    def __init__(self,rag_service):
+        self.runner = OfflineEvaluationRunner(rag_service)
         self.extractor = ContextExtractor()
         self.evaluator = RagasEvaluator()
+        self.rag_service = rag_service
 
     async def run(self):
 

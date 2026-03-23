@@ -1,57 +1,47 @@
-from mcp import ClientSession
-from mcp.client.stdio import stdio_client, StdioServerParameters
-
+import httpx
 
 
 class MCPClient:
 
     def __init__(self):
+        self.base_url = "http://localhost:8000"  # 🔥 change if needed
 
-        self.server_params = StdioServerParameters(
-            command="python",
-            args=["-m", "app.mcp.server.mcp_server"]
-        )
+        self.tool_endpoint_map = {
+            "search": "/tools/search",
+            "extract": "/tools/extract",
+            "summarize": "/tools/summarize",
+            "aggregate": "/tools/aggregate",
+        }
 
-        self._session = None
-        self._transport_cm = None
-
-    async def connect(self):
-
-        if self._session:
-            return
-
-        # open stdio transport
-        self._transport_cm = stdio_client(self.server_params)
-        read_stream, write_stream = await self._transport_cm.__aenter__()
-
-        # open session
-        self._session = ClientSession(read_stream, write_stream)
-        await self._session.__aenter__()
-
-        await self._session.initialize()
+        self.client = httpx.AsyncClient(timeout=10.0)
 
     async def call_tool(self, tool_name, tool_input):
 
-        await self.connect()
+        endpoint = self.tool_endpoint_map.get(tool_name)
 
-        result = await self._session.call_tool(tool_name, tool_input)
+        if not endpoint:
+            raise ValueError(f"Unknown tool: {tool_name}")
 
-        return result.content
+        url = f"{self.base_url}{endpoint}"
+
+        response = await self.client.post(url, json=tool_input)
+
+        response.raise_for_status()
+
+        data = response.json()
+
+        return data
 
     async def list_tools(self):
 
-        await self.connect()
+        url = f"{self.base_url}/tools"
 
-        result = await self._session.list_tools()
+        response = await self.client.get(url)
+        response.raise_for_status()
 
-        return result.tools
-    
+        data = response.json()
+
+        return data["tools"]
+
     async def close(self):
-
-        if self._session:
-            await self._session.__aexit__(None, None, None)
-            self._session = None
-
-        if self._transport_cm:
-            await self._transport_cm.__aexit__(None, None, None)
-            self._transport_cm = None
+        await self.client.aclose()

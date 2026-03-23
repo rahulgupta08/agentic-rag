@@ -19,14 +19,14 @@ class GuardrailManager:
 
         query_lower = query.lower()
 
-        # 1️⃣ Block obvious malicious content
+        #  Block obvious malicious content
         if any(term in query_lower for term in self.blocked_terms):
             return GuardrailResult(
                 allowed=False,
                 reason="Query contains restricted content."
             )
 
-        # 2️⃣ Domain restriction
+        #  Domain restriction
         if self.domain_keywords:
             if not any(keyword in query_lower for keyword in self.domain_keywords):
                 return GuardrailResult(
