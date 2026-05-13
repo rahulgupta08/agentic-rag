@@ -16,9 +16,9 @@ class CrossEncoderReranker(BaseReranker):
     Cross-Encoder based reranker.
 
     Features:
-    - Async-compatible (threadpool execution)
+    - Sync and async support
     - Batch scoring
-    - Structured logging (no print statements)
+    - Structured logging
     - Metadata score injection
     """
 
@@ -40,13 +40,48 @@ class CrossEncoderReranker(BaseReranker):
         self.model = CrossEncoder(model_name)
         self.executor = ThreadPoolExecutor(max_workers=max_workers)
 
-    async def rerank(
+    def rerank(
         self,
         query: str,
         documents: List,
         top_k: int = 5,
     ) -> List:
+        """Synchronous rerank for RAG mode"""
+        if not documents:
+            logger.warning("Reranker received empty document list")
+            return []
 
+        logger.info(
+            "Reranking started | query_length=%d docs_received=%d top_k=%d",
+            len(query),
+            len(documents),
+            top_k,
+        )
+
+        try:
+            # Step 1 — Prepare pairs
+            pairs = [
+                (query, self._get_doc_text(doc))
+                for doc in documents
+            ]
+
+            # Step 2 — Run model directly (sync)
+            scores = self._predict(pairs)
+
+            # Step 3-5 — Process results
+            return self._process_results(documents, scores, top_k)
+
+        except Exception as e:
+            logger.exception("Reranking failed")
+            raise e
+
+    async def arerank(
+        self,
+        query: str,
+        documents: List,
+        top_k: int = 5,
+    ) -> List:
+        """Asynchronous rerank for Agent mode"""
         if not documents:
             logger.warning("Reranker received empty document list")
             return []
@@ -73,110 +108,50 @@ class CrossEncoderReranker(BaseReranker):
                 pairs,
             )
 
-            # Step 3 — Attach scores
-            scored_docs = []
-
-            for doc, score in zip(documents, scores):
-
-                score = float(score)
-
-                #  Handle dict documents
-                if isinstance(doc, dict):
-                    doc["reranker_score"] = score
-
-                #  Handle object documents
-                else:
-                    if not hasattr(doc, "metadata") or doc.metadata is None:
-                        doc.metadata = {}
-
-                    doc.metadata["reranker_score"] = score
-
-                scored_docs.append((doc, score))
-
-            # Step 4 — Sort
-            scored_docs.sort(key=lambda x: x[1], reverse=True)
-
-            # Step 5 — Select top_k
-            reranked_docs = [doc for doc, _ in scored_docs[:top_k]]
-
-            for doc in reranked_docs:
-
-                score = (
-                    doc.get("reranker_score")
-                    if isinstance(doc, dict)
-                    else doc.metadata.get("reranker_score")
-                )
-
-                text = (
-                    doc.get("text")
-                    if isinstance(doc, dict)
-                    else getattr(doc, "page_content", "")
-                )
-
-                logger.info(
-                    "ReRanked Docs Scores: %s | %s",
-                    score,
-                    text[:60],
-                )
-
-   
-            logger.debug(
-                "Reranking completed | returned_docs=%d",
-                len(reranked_docs),
-            )
-
-            return reranked_docs
+            # Step 3-5 — Process results
+            return self._process_results(documents, scores, top_k)
 
         except Exception as e:
-            logger.exception("Reranking failed | error=%s", str(e))
+            logger.exception("Reranking failed")
+            raise e
+
+    def _predict(self, pairs: List) -> List[float]:
+        """Run prediction in batches"""
+        all_scores = []
+        
+        for i in range(0, len(pairs), self.batch_size):
+            batch = pairs[i:i + self.batch_size]
+            scores = self.model.predict(batch)
             
-            raise
-
-    # -------------------------
-    # Internal Helpers
-    # -------------------------
-
-    def _predict(self, pairs: List):
-        """
-        Blocking model inference.
-        Runs inside threadpool.
-        """
-        return self.model.predict(
-            pairs,
-            batch_size=self.batch_size,
-            show_progress_bar=False,
-        )
+            if len(batch) == 1:
+                scores = [scores]
+                
+            all_scores.extend(scores)
+            
+        return all_scores
 
     def _get_doc_text(self, doc) -> str:
-        """
-        Extract text from document safely.
-        """
-
-        if hasattr(doc, "page_content"):
-            return doc.page_content
-
-        if hasattr(doc, "content"):
-            return doc.content
-
-        if hasattr(doc, "text"):
-            return doc.text
-        
+        """Extract text from document"""
         if isinstance(doc, dict):
-            if "text" in doc:
-                return doc["text"]
+            return doc.get("text", "")
+        return getattr(doc, "page_content", "")
 
-            if "content" in doc:
-                return doc["content"]
+    def _process_results(self, documents: List, scores: List[float], top_k: int) -> List:
+        """Process and sort results"""
+        scored_docs = []
 
-            if "page_content" in doc:
-                return doc["page_content"]
+        for doc, score in zip(documents, scores):
+            score = float(score)
 
-        logger.error("Invalid document schema: missing text field")
-        logger.error(
-            "Doc type: %s | Doc repr: %s",
-            type(doc),
-            str(doc)[:200],
-        )
-        raise ValueError(
-            "Document has no valid text field (expected page_content/content/text)"
-        )
+            if isinstance(doc, dict):
+                doc["reranker_score"] = score
+            else:
+                if not hasattr(doc, "metadata") or doc.metadata is None:
+                    doc.metadata = {}
+                doc.metadata["reranker_score"] = score
+
+            scored_docs.append((doc, score))
+
+        # Sort and select top_k
+        scored_docs.sort(key=lambda x: x[1], reverse=True)
+        return [doc for doc, _ in scored_docs[:top_k]]

@@ -52,3 +52,10 @@ class RetrievalError(RAGException):
 class LLMGenerationError(RAGException):
     def __init__(self, message: str):
         super().__init__(message, error_code="LLM_GENERATION_ERROR")
+
+# -------------------------
+# MCP Errors
+# -------------------------
+class MCPError(RAGException):
+    def __init__(self, message: str):
+        super().__init__(message, error_code="MCP_ERROR")

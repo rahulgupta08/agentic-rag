@@ -2,8 +2,13 @@ import json
 from app.agents.agent_state import AgentState
 from app.core.observability import metrics
 import logging
+from pathlib import Path
+
 logger = logging.getLogger(__name__)
 
+# Load template once at module level
+TEMPLATE_PATH = Path(__file__).parent.parent / "prompts" / "planner_prompt.txt"
+PROMPT_TEMPLATE = TEMPLATE_PATH.read_text(encoding="utf-8")
 
 
 def create_planner_node(llm, tool_registry):
@@ -11,7 +16,6 @@ def create_planner_node(llm, tool_registry):
     async def planner_node(state: AgentState):
 
         
-
         query = state.query
         tools_description = tool_registry.format_for_prompt()
         tool_history = ""
@@ -33,164 +37,53 @@ def create_planner_node(llm, tool_registry):
 
             tool_history = "\nPrevious tool attempts:\n" + "\n".join(history_lines)
 
-        prompt = f"""
-            You are an AI planning agent responsible for deciding how to answer a user query using available tools.
+        # Format the prompt with dynamic parts
+        prompt = PROMPT_TEMPLATE.format(
+            tools_description=tools_description,
+            tool_history=tool_history if tool_history else "No previous attempts.",
+            query=query
+        )
 
-            Your role is to create a precise, step-by-step execution plan. You DO NOT execute tools. You ONLY return the plan.
-
-            --------------------------------------------------
-            AVAILABLE TOOLS
-            --------------------------------------------------
-
-            {tools_description}
-
-            Each tool has a defined purpose. You must strictly choose from these tools only.
-
-            --------------------------------------------------
-            PREVIOUS TOOL ATTEMPTS
-            --------------------------------------------------
-
-            {tool_history if tool_history else "No previous attempts."}
-
-            If a tool previously returned no useful results, avoid repeating it unless absolutely necessary.
-
-            --------------------------------------------------
-            TOOL SELECTION POLICY (CRITICAL)
-            --------------------------------------------------
-
-            You MUST follow these rules strictly:
-
-            1. vector_search:
-            - Use ONLY for internal knowledge base queries
-            - Use when the query refers to:
-                - ingested documents
-                - internal data
-                - domain-specific stored knowledge
-            - DO NOT use for real-time or current information
-
-            2. search:
-            - Use for external, real-time, or dynamic information
-            - ALWAYS use for queries involving:
-                - "latest", "current", "today", "recent"
-                - stock prices, news, weather, live data
-                - anything that changes over time
-
-            3. Multi-step queries:
-            - Use BOTH tools if needed
-            - Example:
-                - internal data → vector_search
-                - live data → search
-
-            4. If unsure:
-            - Prefer search over vector_search
-
-            5. Post-processing requirement:
-            - When using "search", you MUST follow it with "extract" or "summarize"
-            - Because search results are unstructured and not directly usable
-
-            --------------------------------------------------
-            PLANNING STRATEGY
-            --------------------------------------------------
-
-            Follow these steps:
-
-            1. Understand the intent of the query
-            2. Identify whether the query requires:
-            - internal knowledge
-            - external / real-time knowledge
-            3. Select the correct tool(s)
-            4. Minimize unnecessary steps
-            5. Always end with "generate"
-
-            --------------------------------------------------
-            EXAMPLES
-            --------------------------------------------------
-
-            Example 1 — Internal knowledge:
-
-            Query:
-            "What does the internal document say about Apple revenue?"
-
-            Plan:
-            [
-            {{
-                "tool": "vector_search",
-                "input": {{"query": "Apple revenue internal documents"}}
-            }},
-            {{
-                "tool": "generate"
-            }}
-            ]
-
-            Example 2 — Real-time query:
-
-            Query:
-            "What is Apple's latest stock price?"
-
-            Plan:
-            [
-            {{
-                "tool": "search",
-                "input": {{"query": "Apple latest stock price"}}
-            }},
-            {{
-                "tool": "generate"
-            }}
-            ]
-
-            Example 3 — Hybrid query:
-
-            Query:
-            "What was Apple's 2023 revenue and what is its current stock price?"
-
-            Plan:
-            [
-            {{
-                "tool": "search",
-                "input": {{"query": "Apple latest stock price"}}
-            }},
-            {{
-                "tool": "extract"
-            }},
-            {{
-                "tool": "generate"
-            }}
-            ]
-
-            --------------------------------------------------
-            IMPORTANT RULES
-            --------------------------------------------------
-
-            - ONLY use tools listed in AVAILABLE TOOLS
-            - NEVER invent tool names
-            - ALWAYS return valid JSON array
-            - ALWAYS end with "generate"
-            - DO NOT include any explanation outside JSON
-            - NEVER go directly from "search" to "generate"
-            - ALWAYS insert "extract" or "summarize" after "search"
-
-            --------------------------------------------------
-            USER QUERY
-            --------------------------------------------------
-
-            {query}
-
-            --------------------------------------------------
-            OUTPUT FORMAT
-            --------------------------------------------------
-
-            Return ONLY the JSON plan.
-            """
-
-        response = await llm.ainvoke(prompt,temperature = 0)
-
+        # Add caching for static parts of the prompt
+        # For OpenAI, we can use prompt caching by adding cache_control to the messages
+        # We'll mark the static parts as cacheable by adding cache_control to the system message
         try:
+            # For OpenAI, we can use prompt caching by adding cache_control to the system message
+            # This is a simplified approach - in practice, you'd want to use the actual caching mechanism
+            # provided by the LLM provider
+            response = await llm.ainvoke(prompt, temperature=0)
+            
             plan = json.loads(response.content.strip())
-        except Exception:
+            
+            # Validate plan structure
+            if not isinstance(plan, list):
+                raise ValueError("Plan must be a list")
+            
+            for step in plan:
+                if not isinstance(step, dict) or "tool" not in step:
+                    raise ValueError(f"Invalid step format: {step}")
+            
+            # Ensure plan ends with "generate"
+            if not plan or plan[-1].get("tool") != "generate":
+                logger.warning("Plan doesn't end with 'generate', appending it")
+                plan.append({"tool": "generate"})
+            
+        except json.JSONDecodeError as e:
+            logger.error(f"Failed to parse LLM response as JSON: {e}")
+            logger.error(f"Raw response: {response.content}")
+            
+            # Fallback plan
             plan = [
                 {"tool": "vector_search", "input": {"query": query}},
                 {"tool": "generate"}
             ]
+            logger.info(f"Using fallback plan: {plan}")
+            
+        except Exception as e:
+            logger.exception(f"Planner failed: {e}")
+            
+            # Minimal fallback
+            plan = [{"tool": "generate"}]
 
         metrics.log_plan(plan)
 

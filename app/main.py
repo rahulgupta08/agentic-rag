@@ -1,3 +1,7 @@
+from app.bootstrap import bootstrap
+bootstrap()
+import logging
+logger = logging.getLogger(__name__)
 import asyncio
 import argparse
 import uuid
@@ -46,7 +50,8 @@ async def main():
         # -----------------------------
         if args.mode == "rag":
             input = RAGInput(query=args.query)
-            result = await app.run_rag(input)
+            # Use synchronous run() for RAG mode
+            result = app.rag_pipeline.run(input.query)
 
         elif args.mode == "agent":
             session_id = args.session_id or str(uuid.uuid4())
@@ -55,6 +60,7 @@ async def main():
                 query=args.query,
                 session_id=session_id
             )
+            # Use asynchronous run() for Agent mode
             result = await app.run_agent(input)
 
         elif args.mode == "ingest":
@@ -67,7 +73,7 @@ async def main():
         elif args.mode == "eval":
             result = await app.evaluate()
 
-        print(result)
+        logger.info(f"Results retrieved : {result}")
 
     finally:
         await app.cleanup()

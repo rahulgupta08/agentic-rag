@@ -4,7 +4,7 @@ import httpx
 class MCPClient:
 
     def __init__(self):
-        self.base_url = "http://localhost:8000"  # 🔥 change if needed
+        self.base_url = "http://localhost:8000"  #  change if needed
 
         self.tool_endpoint_map = {
             "search": "/tools/search",

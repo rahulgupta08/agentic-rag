@@ -1,4 +1,3 @@
-
 from app.bootstrap import bootstrap
 bootstrap()
 import logging
@@ -14,45 +13,57 @@ class RetrieverPipeline(BaseRetriever):
         base_retriever,
         reranker=None,
         query_transformer=None,
-        query_expander=None,   
+        query_expander=None,
         post_processors=None,
         logger=None,
         confidence_threshold: float = 0.5,
+        rerank_quality_threshold: float = 0.6
     ):
         self.base_retriever = base_retriever
         self.reranker = reranker
         self.query_transformer = query_transformer
-        self.query_expander = query_expander   
+        self.query_expander = query_expander
         self.post_processors = post_processors or []
         self.logger = logger or logging.getLogger(__name__)
         self.confidence_threshold = confidence_threshold
+        self.rerank_quality_threshold = rerank_quality_threshold
 
-    async def retrieve(self, query: str, top_k: int = 5):
-
+    def retrieve(self, query: str, top_k: int = 5, skip_rerank: bool = False):
+        """Synchronous retrieve for RAG mode"""
         self.logger.info(f"Original Query: {query}")
 
         # -------------------------
         # Step 1 — Query Rewrite
         # -------------------------
         if self.query_transformer:
-            queries = await self.query_transformer.transform(query)
+            queries = self.query_transformer.transform(query)
             query = queries[0]  # rewriter returns single-item list
             self.logger.info(f"Rewritten Query: {query}")
 
         # -------------------------
         # Step 2 — Initial Retrieval
         # -------------------------
-        documents = await self.base_retriever.retrieve(query, top_k)
+        # Retrieve more documents initially if we might rerank
+        initial_k = top_k * 2 if (self.reranker and not skip_rerank) else top_k
+        documents = self.base_retriever.retrieve(query, initial_k)
+        
+        self.logger.info("Retrieved %d initial documents", len(documents))
 
         # -------------------------
         # Step 3 — Rerank
         # -------------------------
-        if self.reranker:
-            documents = await self.reranker.rerank(
-                query,
-                documents,
-                top_k=top_k
-            )
+        if self.reranker and not skip_rerank:
+            # Check if documents meet quality threshold for reranking
+            if self._meets_quality_threshold(documents):
+                self.logger.info("Quality threshold met, performing reranking")
+                documents = self.reranker.rerank(
+                    query,
+                    documents,
+                    top_k=top_k
+                )
+            else:
+                self.logger.info("Quality threshold not met, skipping reranking")
+                documents = documents[:top_k]
 
         # -------------------------
         # Step 4 — Confidence
@@ -69,13 +80,12 @@ class RetrieverPipeline(BaseRetriever):
         # Step 5 — Adaptive Retrieval
         # -------------------------
         if confidence < self.confidence_threshold and self.query_expander:
-
             self.logger.warning(
-                        "[RETRIEVER] Low confidence=%.4f → triggering expansion",
-                        confidence
-                    )
+                "[RETRIEVER] Low confidence=%.4f → triggering expansion",
+                confidence
+            )
 
-            expanded_queries = await self.query_expander.transform(query)
+            expanded_queries = self.query_expander.transform(query)
 
             self.logger.info(
                 "[RETRIEVER] Expanded Queries (%d): %s",
@@ -84,9 +94,8 @@ class RetrieverPipeline(BaseRetriever):
             )
 
             extra_docs = []
-
             for q in expanded_queries:
-                docs = await self.base_retriever.retrieve(q, top_k)
+                docs = self.base_retriever.retrieve(q, top_k)
                 extra_docs.extend(docs)
 
             self.logger.info(
@@ -97,118 +106,151 @@ class RetrieverPipeline(BaseRetriever):
             # Merge
             documents = self._merge_documents(documents, extra_docs)
 
-            self.logger.info(
-                "[RETRIEVER] After merge docs=%d",
-                len(documents)
-            )
-
-            # Final rerank
+            # Rerank again if available
             if self.reranker:
-                documents = await self.reranker.rerank(
+                documents = self.reranker.rerank(  # Use sync rerank
                     query,
                     documents,
                     top_k=top_k
                 )
 
-            self.logger.info(
-                "[RETRIEVER] Final docs after rerank=%d",
-                len(documents)
-            )
-
         # -------------------------
-        # Step 6 — Post-processing
+        # Step 6 — Post-Processing
         # -------------------------
         for processor in self.post_processors:
             documents = processor.process(documents)
 
         return documents
 
-    # -------------------------
-    # Helpers
-    # -------------------------
+    async def aretrieve(self, query: str, top_k: int = 5, skip_rerank: bool = False):
+        """Asynchronous retrieve for Agent mode"""
+        self.logger.info(f"Original Query: {query}")
+
+        # -------------------------
+        # Step 1 — Query Rewrite
+        # -------------------------
+        if self.query_transformer:
+            queries = await self.query_transformer.transform_async(query)
+            query = queries[0]  # rewriter returns single-item list
+            self.logger.info(f"Rewritten Query: {query}")
+
+        # -------------------------
+        # Step 2 — Initial Retrieval
+        # -------------------------
+        # Retrieve more documents initially if we might rerank
+        initial_k = top_k * 2 if (self.reranker and not skip_rerank) else top_k
+        documents = await self.base_retriever.aretrieve(query, initial_k)
+        
+        logger.info("Retrieved %d initial documents", len(documents))
+
+        # -------------------------
+        # Step 3 — Rerank
+        # -------------------------
+        if self.reranker and not skip_rerank:
+            # Check if documents meet quality threshold for reranking
+            if self._meets_quality_threshold(documents):
+                logger.info("Quality threshold met, performing reranking")
+                documents = await self.reranker.arerank(
+                    query,
+                    documents,
+                    top_k=top_k
+                )
+            else:
+                logger.info("Quality threshold not met, skipping reranking")
+                documents = documents[:top_k]
+
+        # -------------------------
+        # Step 4 — Confidence
+        # -------------------------
+        confidence = self._compute_confidence(documents)
+
+        self.logger.info(
+            "Retrieval confidence: %.4f | threshold: %.4f",
+            confidence,
+            self.confidence_threshold
+        )
+
+        # -------------------------
+        # Step 5 — Adaptive Retrieval
+        # -------------------------
+        if confidence < self.confidence_threshold and self.query_expander:
+            self.logger.warning(
+                "[RETRIEVER] Low confidence=%.4f → triggering expansion",
+                confidence
+            )
+
+            expanded_queries = await self.query_expander.transform_async(query)
+
+            self.logger.info(
+                "[RETRIEVER] Expanded Queries (%d): %s",
+                len(expanded_queries),
+                expanded_queries
+            )
+
+            extra_docs = []
+            for q in expanded_queries:
+                docs = await self.base_retriever.aretrieve(q, top_k)
+                extra_docs.extend(docs)
+
+            self.logger.info(
+                "[RETRIEVER] Retrieved extra docs=%d",
+                len(extra_docs)
+            )
+
+            # Merge
+            documents = self._merge_documents(documents, extra_docs)
+
+            # Rerank again if available
+            if self.reranker:
+                documents = await self.reranker.arerank(  # Use async rerank
+                    query,
+                    documents,
+                    top_k=top_k
+                )
+
+        # -------------------------
+        # Step 6 — Post-Processing
+        # -------------------------
+        for processor in self.post_processors:
+            documents = processor.process(documents)
+
+        return documents
 
     def _compute_confidence(self, documents: List[Dict]) -> float:
-
+        """Helper method to compute retrieval confidence"""
         if not documents:
             return 0.0
+        
+        # Average similarity score across top documents
+        scores = [doc.get("score", 0.0) for doc in documents]
+        return sum(scores) / len(scores)
 
-        weighted_scores = []
-        weights = []
-
-        for i, doc in enumerate(documents):
-
-            if not isinstance(doc, dict):
-                continue
-
-            score = None
-
-            # -------------------------
-            # Normalize scores
-            # -------------------------
-
-            if "reranker_score" in doc:
-                score = self._normalize_reranker_score(doc["reranker_score"])
-
-            elif "score" in doc:
-                score = float(doc["score"])  # already 0–1
-
-            if score is None:
-                continue
-
-            # -------------------------
-            # Top-weighted importance
-            # -------------------------
-            weight = 1 / (i + 1)
-
-            weighted_scores.append(score * weight)
-            weights.append(weight)
-
-        if not weights:
-            return 0.0
-
-        return sum(weighted_scores) / sum(weights)
-
-    def _merge_documents(
-        self,
-        docs1: List[Dict],
-        docs2: List[Dict]
-    ) -> List[Dict]:
-
+    def _merge_documents(self, docs1: List[Dict], docs2: List[Dict]) -> List[Dict]:
+        """Helper method to merge document lists, removing duplicates"""
         seen = set()
         merged = []
 
         for doc in docs1 + docs2:
-
-            text = doc.get("text", "").strip()
-
-            if not text:
-                continue
-
-            if text in seen:
-                continue
-
-            seen.add(text)
-            merged.append(doc)
+            doc_id = doc.get("id")
+            if doc_id not in seen:
+                seen.add(doc_id)
+                merged.append(doc)
 
         return merged
-    
-    def _normalize_reranker_score(self, score: float) -> float:
-        """
-        Normalize reranker scores to 0–1.
-        Handles:
-        - CrossEncoder (-10 to +10)
-        - LLM (0 to 1)
-        """
 
-        try:
-            score = float(score)
-        except:
-            return 0.0
-
-        # If already in [0,1]
-        if 0.0 <= score <= 1.0:
-            return score
-
-        # CrossEncoder normalization (sigmoid)
-        import math
-        return 1 / (1 + math.exp(-score))
+    def _meets_quality_threshold(self, documents: List[Dict]) -> bool:
+        """Check if documents meet quality threshold for reranking."""
+        if not documents:
+            return False
+            
+        # Calculate average similarity score
+        scores = [doc.get("score", 0.0) for doc in documents]
+        avg_score = sum(scores) / len(scores)
+        
+        self.logger.info(
+            "Document quality check: avg_score=%.3f threshold=%.3f",
+            avg_score,
+            self.rerank_quality_threshold
+        )
+        
+        return avg_score > self.rerank_quality_threshold

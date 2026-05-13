@@ -14,6 +14,7 @@ from app.nodes.generator_node import create_generator_node
 from app.nodes.validator_node import create_validator_node
 from app.tools.tool_registry import ToolRegistry
 from app.mcp.client.mcp_singleton import mcp_client
+from app.mcp.client.circuit_breaker import get_mcp_circuit_breaker
 
 
 async def build_agent_graph(rag_service):
@@ -51,11 +52,12 @@ async def build_agent_graph(rag_service):
     llm = rag_service.llm
     # Inject dependencies
     generator_node = create_generator_node(rag_service)
-
-    executor_node = create_executor_node(rag_service)
+    
+    mcp_circuit_breaker = get_mcp_circuit_breaker()
+    executor_node = create_executor_node(rag_service.retriever, rag_service.llm, mcp_circuit_breaker)
     planner_node = create_planner_node(llm, tool_registry)
     router_node = create_router_node(tool_registry)
-    validator_node = create_validator_node(tool_registry)
+    validator_node = create_validator_node(tool_registry, llm=llm)
     
 
     # Register nodes

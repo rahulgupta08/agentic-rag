@@ -1,7 +1,15 @@
-from pydantic import BaseModel
+from typing import List, Dict, Any
+from dataclasses import dataclass
 
+@dataclass
+class Document:
+    """Represents a document chunk with metadata."""
+    content: str
+    metadata: Dict[str, Any]
+    id: str
 
-class RetrievedDocument(BaseModel):
-    text: str
-    source: str
-    tool: str
+@dataclass
+class SearchResult:
+    """Represents a search result from the retriever."""
+    documents: List[Document]
+    query: str

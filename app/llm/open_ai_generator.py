@@ -1,10 +1,10 @@
-from app.bootstrap import bootstrap
-bootstrap()
 import logging
 logger = logging.getLogger(__name__)
+
+from app.llm.base_llm_generator import BaseLLMGenerator
+
 from app.config import OPENAI_API_KEY
 from app.core.exceptions import LLMGenerationError
-
 
 try:
     from openai import OpenAI
@@ -13,10 +13,10 @@ except Exception as e:
     raise LLMGenerationError(f"Failed to initialize OpenAI client: {str(e)}")
 
 
-class Generator:
-
-    def __init__(self, model: str = "gpt-4o-mini"):
+class OpenAIGenerator(BaseLLMGenerator):
+    def __init__(self, model: str = "gpt-4-mini", api_key: str = None):
         self.model = model
+        self.client = OpenAI(api_key=api_key or OPENAI_API_KEY)
 
     def generate(self, query: str, context: str) -> str:
         try:
